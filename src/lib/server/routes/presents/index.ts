@@ -9,6 +9,7 @@ import { conn } from '../../variables';
 import fs from 'node:fs';
 import Path from 'node:path';
 import bought from './bought';
+import clone from './clone';
 
 const presentSchema = z.object({
     name: z.string(),
@@ -368,8 +369,9 @@ export default [
             } satisfies ErrorApiResponse;
         }
     }),
-    // Sub-route for bought endpoint
+    // Sub-route for bought and clone endpoints
     {
-        bought
+        bought,
+        clone
     }
 ];

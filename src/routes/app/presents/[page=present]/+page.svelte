@@ -152,6 +152,30 @@
             icon: 'success'
         });
     };
+
+    let isCloning = $state(false);
+
+    const clonePresent = async (id: number) => {
+        if (isCloning) return;
+        isCloning = true;
+
+        try {
+            const response = await API.presents.clone({ id });
+
+            if (!response.status) {
+                SwalAlert({
+                    title: extractError(response.message),
+                    icon: 'error'
+                });
+
+                return;
+            }
+
+            await goto(`/app/presents/edit/${response.data.id}`);
+        } finally {
+            isCloning = false;
+        }
+    };
 </script>
 
 {#if userState.logged}
@@ -266,6 +290,13 @@
                                     <a href={present.link} target="_blank">
                                         <Icon name="bi-link-45deg" />
                                     </a>
+                                {/if}
+                                {#if minePage}
+                                    <Icon
+                                        onclick={() => clonePresent(present.id)}
+                                        name="bi-copy"
+                                        title="Kopírovat"
+                                    />
                                 {/if}
                             </div>
                         </div>
