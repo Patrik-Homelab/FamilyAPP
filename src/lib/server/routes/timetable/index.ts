@@ -1,10 +1,11 @@
-import type { DailyRoutine, TimetableEntry } from '$/types/database';
+import type { DailyRoutine, Route, RouteSegment, TimetableEntry } from '$/types/database';
 import type { Response, ResponseWithData } from '$/types/types';
 import type { ErrorApiResponse } from '@patrick115/sveltekitapi';
 import type { Selectable } from 'kysely';
 import { z } from 'zod';
 import { loggedProcedure } from '../../api';
 import { conn } from '../../variables';
+import route from './route';
 
 export default [
     // GET: List all users who have timetable entries (or just all users to be safe?)
@@ -62,12 +63,38 @@ export default [
                 .where('user_id', '=', targetUserId)
                 .execute();
 
+            const routes = await conn
+                .selectFrom('route')
+                .selectAll()
+                .where('user_id', '=', targetUserId)
+                .execute();
+
+            const routeIds = routes.map((r) => r.id);
+
+            const segments =
+                routeIds.length > 0
+                    ? await conn
+                          .selectFrom('route_segment')
+                          .selectAll()
+                          .where('route_id', 'in', routeIds)
+                          .orderBy('position', 'asc')
+                          .execute()
+                    : [];
+
             return {
                 status: true,
-                data: { timetable, routine, isMe: targetUserId === ctx.id }
+                data: {
+                    timetable,
+                    routine,
+                    routes,
+                    segments,
+                    isMe: targetUserId === ctx.id
+                }
             } satisfies ResponseWithData<{
                 timetable: Selectable<TimetableEntry>[];
                 routine: Selectable<DailyRoutine>[];
+                routes: Selectable<Route>[];
+                segments: Selectable<RouteSegment>[];
                 isMe: boolean;
             }>;
         } catch (e) {
@@ -250,5 +277,6 @@ export default [
                 message: 'Internal Server Error'
             } satisfies ErrorApiResponse;
         }
-    })
+    }),
+    { route }
 ];

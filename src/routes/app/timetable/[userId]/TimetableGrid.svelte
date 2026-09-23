@@ -1,8 +1,9 @@
 <script lang="ts">
-    import type { DailyRoutine } from '$/types/database';
+    import type { DailyRoutine, Route, RouteSegment } from '$/types/database';
     import { minToTime } from '$lib/timetableConfig';
     import type { Selectable } from 'kysely';
     import EntryModal from './EntryModal.svelte';
+    import type { RouteSegmentLocal } from './RouteModal.svelte';
     import RoutineControls from './RoutineControls.svelte';
 
     type LocalEntry = {
@@ -16,14 +17,54 @@
         room?: string | null;
     };
 
-    let { timetable, routine, isMe, onAdd, onDelete, onUpdateRoutine } = $props<{
+    let {
+        timetable,
+        routine,
+        routes,
+        segments,
+        isMe,
+        onAdd,
+        onDelete,
+        onUpdateRoutine,
+        onUpdateRoute
+    } = $props<{
         timetable: LocalEntry[];
         routine: Selectable<DailyRoutine>[];
+        routes: Selectable<Route>[];
+        segments: Selectable<RouteSegment>[];
         isMe: boolean;
         onAdd: (e: LocalEntry) => void;
         onDelete: (id: number) => void;
         onUpdateRoutine: (r: Partial<Selectable<DailyRoutine>>) => void;
+        onUpdateRoute: (
+            day: number,
+            direction: 'morning' | 'evening',
+            segs: RouteSegmentLocal[]
+        ) => void;
     }>();
+
+    function getRouteSegments(
+        day: number,
+        direction: 'morning' | 'evening'
+    ): RouteSegmentLocal[] {
+        const route = routes.find(
+            (r: Selectable<Route>) => r.day === day && r.direction === direction
+        );
+        if (!route) return [];
+        return segments
+            .filter((s: Selectable<RouteSegment>) => s.route_id === route.id)
+            .sort(
+                (a: Selectable<RouteSegment>, b: Selectable<RouteSegment>) =>
+                    a.position - b.position
+            )
+            .map((s: Selectable<RouteSegment>) => ({
+                transport_type: s.transport_type as 'bus' | 'car',
+                start_time: s.start_time != null ? minToTime(s.start_time) : '',
+                end_time: s.end_time != null ? minToTime(s.end_time) : '',
+                start_station: s.start_station ?? '',
+                end_station: s.end_station ?? ''
+            }));
+    }
 
     // Configuration
     const days = ['Po', 'Út', 'St', 'Čt', 'Pá'];
@@ -128,6 +169,8 @@
                         data={routine.find((r: Selectable<DailyRoutine>) => r.day === i)}
                         {isMe}
                         onChange={onUpdateRoutine}
+                        routeSegments={getRouteSegments(i, 'morning')}
+                        onRouteChange={(segs) => onUpdateRoute(i, 'morning', segs)}
                     />
                 </div>
             {/each}
@@ -233,6 +276,8 @@
                         data={routine.find((r: Selectable<DailyRoutine>) => r.day === i)}
                         {isMe}
                         onChange={onUpdateRoutine}
+                        routeSegments={getRouteSegments(i, 'evening')}
+                        onRouteChange={(segs) => onUpdateRoute(i, 'evening', segs)}
                     />
                 </div>
             {/each}

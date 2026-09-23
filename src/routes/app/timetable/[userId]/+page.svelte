@@ -1,9 +1,11 @@
 <script lang="ts">
-    import type { DailyRoutine } from '$/types/database';
+    import type { DailyRoutine, Route, RouteSegment } from '$/types/database';
     import { page } from '$app/stores';
     import { API } from '$lib/api';
     import { SwalAlert } from '$lib/functions';
+    import { timeToMin } from '$lib/timetableConfig';
     import type { Selectable } from 'kysely';
+    import type { RouteSegmentLocal } from './RouteModal.svelte';
     import TimetableGrid from './TimetableGrid.svelte';
 
     // Type definition since database.ts uses Generated<T> which is confusing in frontend
@@ -21,6 +23,8 @@
     let loading = $state(true);
     let timetable = $state<LocalEntry[]>([]);
     let routine = $state<Selectable<DailyRoutine>[]>([]);
+    let routes = $state<Selectable<Route>[]>([]);
+    let segments = $state<Selectable<RouteSegment>[]>([]);
     let isMe = $state(false);
 
     // Using page stores properly in Svelte 5 (or just use $page with stores import)
@@ -35,6 +39,8 @@
             // @ts-expect-error - Kysely types mismatch with strict client types sometimes
             timetable = res.data.timetable;
             routine = res.data.routine;
+            routes = res.data.routes;
+            segments = res.data.segments;
             isMe = res.data.isMe;
         }
         loading = false;
@@ -92,6 +98,31 @@
             await loadData(); // Reload to confirm state
         }
     }
+
+    async function handleUpdateRoute(
+        day: number,
+        direction: 'morning' | 'evening',
+        segs: RouteSegmentLocal[]
+    ) {
+        const res = await API.timetable.route.PUT({
+            day,
+            direction,
+            segments: segs.map((seg, position) => ({
+                position,
+                transport_type: seg.transport_type,
+                start_time: seg.start_time ? timeToMin(seg.start_time) : null,
+                end_time: seg.end_time ? timeToMin(seg.end_time) : null,
+                start_station: seg.start_station || null,
+                end_station: seg.end_station || null
+            }))
+        });
+
+        if (res.status) {
+            await loadData();
+        } else {
+            SwalAlert({ icon: 'error', title: 'Chyba', text: res.message });
+        }
+    }
 </script>
 
 <div class="bg-background h-full min-h-screen w-full p-2 md:p-4">
@@ -105,10 +136,13 @@
         <TimetableGrid
             {timetable}
             {routine}
+            {routes}
+            {segments}
             {isMe}
             onAdd={handleAddEntry}
             onDelete={handleDeleteEntry}
             onUpdateRoutine={handleUpdateRoutine}
+            onUpdateRoute={handleUpdateRoute}
         />
     {/if}
 </div>

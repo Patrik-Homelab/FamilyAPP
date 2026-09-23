@@ -1,16 +1,20 @@
 <script lang="ts">
     import type { DailyRoutine } from '$/types/database';
+    import RouteModal, { type RouteSegmentLocal } from './RouteModal.svelte';
 
-    let { day, type, data, isMe, onChange } = $props<{
+    let { day, type, data, isMe, onChange, routeSegments, onRouteChange } = $props<{
         day: number;
         type: 'morning' | 'evening';
         data: DailyRoutine | undefined;
         isMe: boolean;
         onChange: (r: Partial<DailyRoutine>) => void;
+        routeSegments: RouteSegmentLocal[];
+        onRouteChange: (segments: RouteSegmentLocal[]) => void;
     }>();
 
     // Local state for editing
     let isEditing = $state(false);
+    let showRouteModal = $state(false);
 
     // Derived values
     const routine = $derived(
@@ -238,4 +242,52 @@
             <span class="text-text text-lg opacity-30">+</span>
         {/if}
     </div>
+
+    <!-- Route segments summary -->
+    <!-- svelte-ignore a11y_click_events_have_key_events -->
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
+    <div
+        class="border-primary text-text flex w-full cursor-pointer flex-wrap items-center justify-center gap-1 border-t p-1 text-xs transition {isMe
+            ? 'hover:bg-secondary'
+            : ''}"
+        onclick={isMe ? () => (showRouteModal = true) : undefined}
+        title={isMe ? 'Plánovat trasu' : undefined}
+    >
+        {#if routeSegments.length > 0}
+            {#each routeSegments as seg, i (i)}
+                {#if i > 0}
+                    <i class="bi bi-arrow-right opacity-40"></i>
+                {/if}
+                <span
+                    class="rounded px-1 py-0.5 {seg.transport_type === 'bus'
+                        ? 'bg-blue-900/40 text-blue-300'
+                        : 'bg-orange-900/40 text-orange-300'}"
+                    title={seg.transport_type === 'bus'
+                        ? `${seg.start_station || '?'} → ${seg.end_station || '?'}`
+                        : `${seg.start_time || '?'} – ${seg.end_time || '?'}`}
+                >
+                    <i
+                        class="bi {seg.transport_type === 'bus'
+                            ? 'bi-bus-front'
+                            : 'bi-car-front'}"
+                    ></i>
+                </span>
+            {/each}
+        {:else if isMe}
+            <span class="opacity-30"><i class="bi bi-map"></i> trasa</span>
+        {/if}
+    </div>
 </div>
+
+{#if showRouteModal}
+    <RouteModal
+        {day}
+        direction={type}
+        segments={routeSegments}
+        onSave={(segs) => {
+            onRouteChange(segs);
+            showRouteModal = false;
+        }}
+        onClose={() => (showRouteModal = false)}
+    />
+{/if}

@@ -67,6 +67,24 @@ export interface Invitation {
     user_id: number;
 }
 
+export interface Route {
+    day: number;
+    direction: string; // 'morning' | 'evening'
+    id: Generated<number>;
+    user_id: number;
+}
+
+export interface RouteSegment {
+    end_station: Generated<string | null>;
+    end_time: Generated<number | null>;
+    id: Generated<number>;
+    position: number;
+    route_id: number;
+    start_station: Generated<string | null>;
+    start_time: Generated<number | null>;
+    transport_type: string; // 'bus' | 'car'
+}
+
 export interface Present {
     bought: Generated<number>;
     created_at: Generated<Date>;
@@ -152,6 +170,8 @@ export interface DB {
     group_permissions: GroupPermissions;
     invitation: Invitation;
     present: Present;
+    route: Route;
+    route_segment: RouteSegment;
     shoppinglist: Shoppinglist;
     solar_cooling: SolarCooling;
     timetable_entry: TimetableEntry;
