@@ -25,6 +25,9 @@
 
     const warmOfflineCache = async () => {
         if (!browser || !navigator.onLine) return;
+        // Warm the app root navigation page
+        fetch('/app').catch(() => {});
+
         const routesToWarm = [
             '/app/presents/mine',
             '/app/presents/others',

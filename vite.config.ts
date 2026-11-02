@@ -16,6 +16,7 @@ export default defineConfig({
                 globPatterns: ['client/**/*.{js,css,ico,png,svg,webp,woff,woff2}'],
                 importScripts: ['/webworker/push-worker.js'],
                 cleanupOutdatedCaches: true,
+                navigateFallback: null,
                 runtimeCaching: [
                     {
                         // Cache uploaded images (presents, debts, shopping items, etc.)
@@ -81,7 +82,7 @@ export default defineConfig({
                     process.env.NODE_ENV === 'production'
                         ? 'Family APP'
                         : 'Family APP - DEV',
-                start_url: '/',
+                start_url: '/app',
                 display: 'standalone',
                 background_color: '#0e0201',
                 theme_color: '#0e0201',

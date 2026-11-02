@@ -104,6 +104,56 @@ async function clearBadge(category) {
     }
 }
 
+// Offline Navigation Fallback
+self.addEventListener('fetch', (event) => {
+    if (event.request.mode === 'navigate') {
+        event.respondWith(
+            fetch(event.request)
+                .then(async (response) => {
+                    if (response.status === 200) {
+                        const copy = response.clone();
+                        try {
+                            const cache = await caches.open('familyapp-pages');
+                            await cache.put(event.request, copy);
+                        } catch {
+                            // ignore cache write error
+                        }
+                    }
+                    return response;
+                })
+                .catch(async () => {
+                    // Try exact request from any cache
+                    const directMatch = await caches.match(event.request);
+                    if (directMatch) return directMatch;
+
+                    // Fallback to cached '/app'
+                    const appMatch = await caches.match('/app');
+                    if (appMatch) return appMatch;
+
+                    // Fallback to any cached page in familyapp-pages
+                    try {
+                        const cache = await caches.open('familyapp-pages');
+                        const keys = await cache.keys();
+                        for (const req of keys) {
+                            const match = await cache.match(req);
+                            if (match) return match;
+                        }
+                    } catch {
+                        // ignore
+                    }
+
+                    // Ultimate fallback
+                    return new Response(
+                        '<!DOCTYPE html><html><body style="background:#0e0201;color:#fff;font-family:sans-serif;text-align:center;padding:50px;"><h2>FamilyAPP je offline</h2><p>Zkontrolujte připojení k internetu a zkuste to znovu.</p><button onclick="location.reload()" style="background:#f72808;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-size:16px;cursor:pointer;margin-top:20px;">Zkusit znovu</button></body></html>',
+                        {
+                            headers: { 'Content-Type': 'text/html; charset=utf-8' }
+                        }
+                    );
+                })
+        );
+    }
+});
+
 self.addEventListener('push', (event) => {
     let payload = {};
     try {

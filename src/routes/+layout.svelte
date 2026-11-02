@@ -5,7 +5,8 @@
 
     import { API } from '$/lib/api';
     import { logged, setState } from '$/lib/state.svelte';
-    import { type Snippet } from 'svelte';
+    import { browser } from '$app/environment';
+    import { onMount, type Snippet } from 'svelte';
     import type { LayoutData } from './$types';
 
     let { children, data }: { children: Snippet; data: LayoutData } = $props();
@@ -24,6 +25,12 @@
         userState: data.userState,
         title: '',
         pushEnabled: false
+    });
+
+    onMount(() => {
+        if (browser && 'serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {});
+        }
     });
 </script>
 
