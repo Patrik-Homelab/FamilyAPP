@@ -8,6 +8,7 @@
     import type { BootstrapIcon } from '$/types/bootstrap_icons';
     import { goto } from '$app/navigation';
     import { page } from '$app/state';
+    import { untrack } from 'svelte';
     import { twMerge } from 'tailwind-merge';
     import ClickOutside from '../clickOutside.svelte';
     import Group from '../group.svelte';
@@ -95,26 +96,26 @@
         }
     ];
 
-    let route = $state<(typeof routes)[number]>();
-
     const _state = getState();
+
+    let route = $derived.by(() => {
+        const pathname = page.url.pathname.replace(BASE, '');
+        return routes.find((r) =>
+            r.startsWith ? pathname.startsWith(r.path) : pathname === r.path
+        );
+    });
 
     let totalBadges = $derived(
         Object.values(badgeStore.counts).reduce((acc, count) => acc + count, 0)
     );
 
     $effect(() => {
-        const pathname = page.url.pathname.replace(BASE, '');
-        route = routes.find((route) =>
-            route.startsWith ? pathname.startsWith(route.path) : pathname === route.path
-        );
-        if (route && route.path) {
-            badgeStore.clear(route.path);
-        }
-    });
-
-    $effect(() => {
         _state.title = route ? route.name : '';
+        if (route && route.path) {
+            untrack(() => {
+                badgeStore.clear(route.path);
+            });
+        }
     });
 
     let opened = $state(false);

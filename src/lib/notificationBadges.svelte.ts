@@ -3,6 +3,10 @@ import { browser } from '$app/environment';
 const DB_NAME = 'familyapp_meta';
 const DB_VERSION = 1;
 const STORE_NAME = 'badges';
+const CLIENT_ID =
+    typeof crypto !== 'undefined' && 'randomUUID' in crypto
+        ? crypto.randomUUID()
+        : Math.random().toString(36).slice(2);
 
 const CATEGORIES = [
     '/timetable',
@@ -89,10 +93,10 @@ export async function clearBadgeForCategory(category: string): Promise<void> {
             });
         }
 
-        // Broadcast to other tabs
+        // Broadcast to other tabs/windows (tagged with CLIENT_ID to prevent self-loop)
         try {
             const bc = new BroadcastChannel('familyapp_badges');
-            bc.postMessage({ type: 'BADGE_UPDATE', category });
+            bc.postMessage({ type: 'BADGE_UPDATE', category, sender: CLIENT_ID });
             bc.close();
         } catch {
             // ignore
@@ -115,7 +119,9 @@ class BadgeStore {
 
         try {
             this.channel = new BroadcastChannel('familyapp_badges');
-            this.channel.onmessage = () => {
+            this.channel.onmessage = (event) => {
+                // Ignore messages sent by this same window/tab
+                if (event.data && event.data.sender === CLIENT_ID) return;
                 this.refresh();
             };
         } catch {
@@ -153,7 +159,15 @@ class BadgeStore {
             }
         }
 
-        this.counts = stored;
+        // Only reassign if counts actually changed
+        const keysA = Object.keys(stored);
+        const keysB = Object.keys(this.counts);
+        if (
+            keysA.length !== keysB.length ||
+            keysA.some((key) => stored[key] !== this.counts[key])
+        ) {
+            this.counts = stored;
+        }
     }
 
     async clear(category: string) {
