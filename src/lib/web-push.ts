@@ -31,7 +31,8 @@ const getPwaRegistration = async (): Promise<ServiceWorkerRegistration | null> =
     if (!registration) {
         try {
             registration = await navigator.serviceWorker.register('/sw.js', {
-                scope: '/'
+                scope: '/',
+                updateViaCache: 'none'
             });
         } catch (e) {
             console.error('Failed to register /sw.js:', e);

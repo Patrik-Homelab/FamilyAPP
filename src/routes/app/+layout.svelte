@@ -82,7 +82,9 @@
 
         // Register Service Worker for PWA offline caching
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {});
+            navigator.serviceWorker
+                .register('/sw.js', { scope: '/', updateViaCache: 'none' })
+                .catch(() => {});
         }
 
         // Warm cache in background after a slight delay

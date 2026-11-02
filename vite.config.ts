@@ -46,18 +46,6 @@ export default defineConfig({
                         }
                     },
                     {
-                        // SvelteKit HTML page navigations
-                        urlPattern: ({ request }) => request.mode === 'navigate',
-                        handler: 'NetworkFirst',
-                        options: {
-                            cacheName: 'familyapp-pages',
-                            networkTimeoutSeconds: 3,
-                            cacheableResponse: {
-                                statuses: [0, 200]
-                            }
-                        }
-                    },
-                    {
                         // Fonts and icons
                         urlPattern: ({ url }) =>
                             url.origin.includes('fonts.') ||
