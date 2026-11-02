@@ -6,8 +6,71 @@ export default defineConfig({
     plugins: [
         sveltekit(),
         SvelteKitPWA({
+            srcDir: 'src',
+            registerType: 'autoUpdate',
+            strategies: 'generateSW',
             devOptions: {
                 enabled: true
+            },
+            workbox: {
+                globPatterns: ['client/**/*.{js,css,ico,png,svg,webp,woff,woff2}'],
+                importScripts: ['/webworker/push-worker.js'],
+                cleanupOutdatedCaches: true,
+                runtimeCaching: [
+                    {
+                        // Cache uploaded images (presents, debts, shopping items, etc.)
+                        urlPattern: /^https?:\/\/.*\/images\/.*/i,
+                        handler: 'CacheFirst',
+                        options: {
+                            cacheName: 'familyapp-images',
+                            expiration: {
+                                maxEntries: 500,
+                                maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
+                            },
+                            cacheableResponse: {
+                                statuses: [0, 200]
+                            }
+                        }
+                    },
+                    {
+                        // SvelteKit data requests (__data.json)
+                        urlPattern: ({ url }) => url.pathname.includes('__data.json'),
+                        handler: 'NetworkFirst',
+                        options: {
+                            cacheName: 'familyapp-data',
+                            networkTimeoutSeconds: 3,
+                            cacheableResponse: {
+                                statuses: [0, 200]
+                            }
+                        }
+                    },
+                    {
+                        // SvelteKit HTML page navigations
+                        urlPattern: ({ request }) => request.mode === 'navigate',
+                        handler: 'NetworkFirst',
+                        options: {
+                            cacheName: 'familyapp-pages',
+                            networkTimeoutSeconds: 3,
+                            cacheableResponse: {
+                                statuses: [0, 200]
+                            }
+                        }
+                    },
+                    {
+                        // Fonts and icons
+                        urlPattern: ({ url }) =>
+                            url.origin.includes('fonts.') ||
+                            url.pathname.includes('bootstrap-icons'),
+                        handler: 'StaleWhileRevalidate',
+                        options: {
+                            cacheName: 'familyapp-static',
+                            expiration: {
+                                maxEntries: 100,
+                                maxAgeSeconds: 60 * 60 * 24 * 365
+                            }
+                        }
+                    }
+                ]
             },
             manifest: {
                 name:
