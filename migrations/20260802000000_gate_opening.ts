@@ -5,6 +5,7 @@ import { Kysely, sql } from 'kysely';
 export const up = async (conn: Kysely<any>) => {
     await conn.schema
         .createTable('gate_opening')
+        .ifNotExists()
         .addColumn('id', 'integer', (col) => col.autoIncrement().primaryKey())
         .addColumn('group_id', 'integer', (col) =>
             col.notNull().references('group.id').onDelete('cascade')
