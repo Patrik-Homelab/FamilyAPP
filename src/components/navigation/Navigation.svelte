@@ -1,7 +1,7 @@
 <script lang="ts">
     import { API } from '$/lib/api';
     import { formatUser, SwalAlert } from '$/lib/functions';
-    import { badgeStore } from '$/lib/notificationBadges';
+    import { badgeStore } from '$/lib/notificationBadges.svelte';
     import { Permissions, type Permission } from '$/lib/permissions';
     import { getState, logged } from '$/lib/state.svelte';
     import { subscribePush, unsubscribePush } from '$/lib/web-push';

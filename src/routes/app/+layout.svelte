@@ -3,7 +3,7 @@
     import Navigation from '$/components/navigation/Navigation.svelte';
     import { API } from '$/lib/api';
     import { SwalAlert } from '$/lib/functions';
-    import { badgeStore } from '$/lib/notificationBadges';
+    import { badgeStore } from '$/lib/notificationBadges.svelte';
     import { getState, logged } from '$/lib/state.svelte';
     import { subscribePush } from '$/lib/web-push';
     import { browser } from '$app/environment';
