@@ -1,6 +1,7 @@
 <script lang="ts">
     import { API } from '$/lib/api';
     import { formatUser, SwalAlert } from '$/lib/functions';
+    import { badgeStore } from '$/lib/notificationBadges';
     import { Permissions, type Permission } from '$/lib/permissions';
     import { getState, logged } from '$/lib/state.svelte';
     import { subscribePush, unsubscribePush } from '$/lib/web-push';
@@ -61,11 +62,6 @@
             startsWith: true
         },
         {
-            name: 'Teplota vody',
-            path: '/water-temperature',
-            icon: 'bi-thermometer-half'
-        },
-        {
             name: 'Správa skupin',
             path: '/groups',
             startsWith: true,
@@ -103,11 +99,18 @@
 
     const _state = getState();
 
+    let totalBadges = $derived(
+        Object.values(badgeStore.counts).reduce((acc, count) => acc + count, 0)
+    );
+
     $effect(() => {
         const pathname = page.url.pathname.replace(BASE, '');
         route = routes.find((route) =>
             route.startsWith ? pathname.startsWith(route.path) : pathname === route.path
         );
+        if (route && route.path) {
+            badgeStore.clear(route.path);
+        }
     });
 
     $effect(() => {
@@ -187,11 +190,20 @@
 </svelte:head>
 
 <div class="flex items-center gap-2 p-2 md:hidden">
-    <Icon
-        onclick={() => (opened = true)}
-        name="bi-list"
-        class="border-primary bg-secondary hover:bg-accent active:bg-accent rounded-md border-[1px] px-1.5 py-0.5 text-3xl font-bold transition-colors duration-200"
-    />
+    <div class="relative">
+        <Icon
+            onclick={() => (opened = true)}
+            name="bi-list"
+            class="border-primary bg-secondary hover:bg-accent active:bg-accent rounded-md border-[1px] px-1.5 py-0.5 text-3xl font-bold transition-colors duration-200"
+        />
+        {#if totalBadges > 0}
+            <span
+                class="bg-accent text-background absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[11px] font-bold shadow"
+            >
+                {totalBadges > 99 ? '99+' : totalBadges}
+            </span>
+        {/if}
+    </div>
     <Title>{_state.title}</Title>
 </div>
 
@@ -241,15 +253,28 @@
 
                 return perms && hidden;
             }) as _route, i (i)}
+                {@const badgeCount = _route.path
+                    ? badgeStore.counts[_route.path] || 0
+                    : 0}
                 <a
                     class:border-b-2={_route.name == route?.name}
                     class:hover:after:scale-x-100={_route.name != route?.name}
                     href="/app{_route.path}"
-                    onclick={() => (opened = false)}
-                    class="border-b-text font-poppins after:bg-text w-max text-2xl font-bold after:block after:h-[2px] after:w-full after:origin-left after:scale-x-0 after:transition-transform after:duration-200"
+                    onclick={() => {
+                        opened = false;
+                        if (_route.path) badgeStore.clear(_route.path);
+                    }}
+                    class="border-b-text font-poppins after:bg-text flex w-max items-center gap-2 text-2xl font-bold after:block after:h-[2px] after:w-full after:origin-left after:scale-x-0 after:transition-transform after:duration-200"
                 >
                     <Icon name={_route.icon} />
-                    {_route.name}
+                    <span>{_route.name}</span>
+                    {#if badgeCount > 0}
+                        <span
+                            class="bg-accent ml-2 inline-flex items-center justify-center rounded-full px-2 py-0.5 text-xs font-bold text-white shadow"
+                        >
+                            {badgeCount > 99 ? '99+' : badgeCount}
+                        </span>
+                    {/if}
                 </a>
             {/each}
         </div>
