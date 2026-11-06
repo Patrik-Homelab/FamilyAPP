@@ -33,7 +33,8 @@
             '/app/presents/others',
             '/app/debt',
             '/app/shoppinglist',
-            '/app/calendar'
+            '/app/calendar',
+            '/app/water-temperature'
         ];
 
         for (const route of routesToWarm) {

@@ -9,6 +9,7 @@ const CATEGORIES = [
     '/debt',
     '/calendar',
     '/shoppinglist',
+    '/water-temperature',
     '/groups',
     '/users',
     '/notifications',

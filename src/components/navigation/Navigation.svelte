@@ -63,6 +63,11 @@
             startsWith: true
         },
         {
+            name: 'Teplota vody',
+            path: '/water-temperature',
+            icon: 'bi-thermometer-half'
+        },
+        {
             name: 'Správa skupin',
             path: '/groups',
             startsWith: true,

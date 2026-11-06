@@ -2,6 +2,7 @@ import { router } from '../api';
 import auth from './auth';
 import calendar from './calendar';
 import debt from './debt';
+import energyface from './energyface';
 import groups from './groups';
 import invitation from './invitation';
 import notifications from './notifications';
@@ -19,6 +20,7 @@ export const r = router({
     users,
     invitation,
     debt,
+    energyface,
     push,
     calendar,
     presents,
