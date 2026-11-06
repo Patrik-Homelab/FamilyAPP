@@ -1,7 +1,7 @@
 import { APICreate, MiddleWareError } from '@patrick115/sveltekitapi';
 import type { Context } from './context';
 import { Permissions, type Permission } from '../permissions';
-import { API_SECRET } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 
 export const api = new APICreate<Context>();
 
@@ -37,8 +37,9 @@ export const permProcedure = (permissions: Permission[]) => {
 
 export const protectedProcedure = procedure.use(async ({ ev, next }) => {
     const secret = ev.url.searchParams.get('SECRET');
+    const apiSecret = env.API_SECRET || process.env.API_SECRET;
 
-    if (!secret || secret !== API_SECRET) {
+    if (!secret || !apiSecret || secret !== apiSecret) {
         throw new MiddleWareError({
             status: false,
             code: 401,
