@@ -6,6 +6,12 @@
     const { children, class: cls, ...props }: SvelteHTMLElements['th'] = $props();
 </script>
 
-<th {...props} class={twMerge('border-text border-2', resolveSvelteClass(cls ?? ''))}>
+<th
+    {...props}
+    class={twMerge(
+        'text-text/70 bg-white/[0.04] px-3 py-3 text-center text-xs font-semibold tracking-wider uppercase',
+        resolveSvelteClass(cls ?? '')
+    )}
+>
     {@render children?.()}
 </th>

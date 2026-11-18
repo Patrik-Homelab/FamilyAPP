@@ -72,8 +72,8 @@ export default defineConfig({
                         : 'Family APP - DEV',
                 start_url: '/',
                 display: 'standalone',
-                background_color: '#0e0201',
-                theme_color: '#0e0201',
+                background_color: '#0b0d13',
+                theme_color: '#0b0d13',
                 lang: 'cs',
                 scope: '/',
                 icons: [

@@ -82,14 +82,18 @@
     };
 </script>
 
-<section class="flex flex-1 flex-col gap-4 p-4">
+<section class="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 pb-6">
     <Title>Nastavení</Title>
 
-    <div class="bg-secondary rounded-lg p-4 shadow-md">
-        <h2 class="mb-4 text-xl font-bold">Bankovní účet</h2>
-        <p class="mb-4 text-sm opacity-75">
-            Zadejte informace o vašem bankovním účtu pro generování QR kódů k platbám
-        </p>
+    <div
+        class="bg-secondary/85 flex flex-col gap-4 rounded-2xl border border-white/10 p-5 shadow-md sm:p-6"
+    >
+        <div>
+            <h2 class="font-poppins text-xl font-bold">Bankovní účet</h2>
+            <p class="text-text/65 mt-1 text-sm">
+                Zadejte informace o vašem bankovním účtu pro generování QR kódů k platbám
+            </p>
+        </div>
 
         <div class="flex flex-col gap-4">
             <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -117,15 +121,21 @@
                 </Entry>
             </div>
 
-            <div class="text-sm opacity-75">
-                <strong>Formát účtu:</strong>
-                {bankAccountPrefix || '0'}-{bankAccountNumber ||
-                    'XXXXXXXXXX'}/{bankCode || 'XXXX'}
+            <div
+                class="bg-background/50 flex items-center gap-2 rounded-xl border border-white/10 px-4 py-2.5 text-sm"
+            >
+                <span class="text-text/60 font-medium">Formát účtu:</span>
+                <code class="font-bold">
+                    {bankAccountPrefix || '0'}-{bankAccountNumber ||
+                        'XXXXXXXXXX'}/{bankCode || 'XXXX'}
+                </code>
             </div>
 
-            <Button onclick={saveSettings} class="w-full md:w-auto">
-                Uložit nastavení
-            </Button>
+            <div>
+                <Button onclick={saveSettings} class="w-full md:w-auto">
+                    Uložit nastavení
+                </Button>
+            </div>
         </div>
     </div>
 </section>

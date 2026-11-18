@@ -1,6 +1,9 @@
 <script lang="ts">
+    import { Button } from '$/components/form';
     import GroupTag from '$/components/group.svelte';
+    import Title from '$/components/headers/Title.svelte';
     import Icon from '$/components/Icon.svelte';
+    import { Table, Td, Th, Tr } from '$/components/table';
     import { API } from '$/lib/api';
     import { SwalAlert } from '$/lib/functions';
     import type { Group } from '$/types/database';
@@ -159,101 +162,124 @@
     }>;
 </script>
 
-<div class="mt-2 h-full w-full flex-1">
+<div class="flex flex-1 flex-col gap-5 pb-6">
+    <div
+        class="bg-secondary/80 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 p-4 shadow-sm"
+    >
+        <Title class="text-xl lg:text-2xl">Správa skupin</Title>
+        <Button onclick={addNew} class="w-auto bg-emerald-600 hover:bg-emerald-500">
+            <Icon name="bi-plus-lg" />
+            <span>Nová skupina</span>
+        </Button>
+    </div>
+
     {#if groups}
-        <table class="border-text w-full border-collapse border-2">
+        <Table>
             <thead>
-                <tr class="border-text border-2">
-                    <th class="border-text border-2">Id</th>
-                    <th class="border-text border-2">Jméno</th>
-                    <th class="border-text border-2">Barva Textu</th>
-                    <th class="border-text border-2">Barva Pozadí</th>
-                    <th class="border-text border-2">Ukázka</th>
-                    <th class="border-text border-2"></th>
-                </tr>
+                <Tr>
+                    <Th>ID</Th>
+                    <Th>Název</Th>
+                    <Th>Text</Th>
+                    <Th>Pozadí</Th>
+                    <Th>Ukázka</Th>
+                    <Th></Th>
+                </Tr>
             </thead>
-            <tbody>
+            <tbody class="text-center">
                 {#each groups as group, idx (idx)}
                     {@const inputs = {
                         text: undefined as HTMLInputElement | undefined,
                         background: undefined as HTMLInputElement | undefined
                     }}
-                    <tr class="border-text border-2">
-                        <td class="border-text border-2">{group.id}</td>
-                        <td class="border-text border-2">
+                    <Tr>
+                        <Td class="text-text/60">{group.id}</Td>
+                        <Td>
                             <input
-                                class="w-full border-none bg-transparent text-center outline-hidden"
+                                class="bg-background/50 focus:border-accent w-full min-w-24 rounded-lg border border-white/10 px-2 py-1 text-center text-sm font-semibold outline-hidden"
                                 bind:value={group.name}
                                 size={1}
                             />
-                        </td>
-                        <td
-                            onclick={() => inputs.text?.click()}
-                            class="border-text border-2"
-                            style="background-color: {group.text_color};"
-                        >
+                        </Td>
+                        <Td>
+                            <button
+                                type="button"
+                                onclick={() => inputs.text?.click()}
+                                class="mx-auto block h-7 w-10 cursor-pointer rounded-lg border border-white/20 shadow-xs"
+                                style="background-color: {group.text_color};"
+                                aria-label="Barva textu"
+                            ></button>
                             <input
                                 bind:this={inputs.text}
                                 bind:value={group.text_color}
                                 hidden
                                 type="color"
                             />
-                        </td>
-                        <td
-                            onclick={() => inputs.background?.click()}
-                            class="border-text border-2"
-                            style="background-color: {group.bg_color};"
-                        >
+                        </Td>
+                        <Td>
+                            <button
+                                type="button"
+                                onclick={() => inputs.background?.click()}
+                                class="mx-auto block h-7 w-10 cursor-pointer rounded-lg border border-white/20 shadow-xs"
+                                style="background-color: {group.bg_color};"
+                                aria-label="Barva pozadí"
+                            ></button>
                             <input
                                 bind:this={inputs.background}
                                 bind:value={group.bg_color}
                                 hidden
                                 type="color"
                             />
-                        </td>
-                        <td class="flex items-center justify-center">
+                        </Td>
+                        <Td>
                             <GroupTag
                                 backgroundColor={group.bg_color}
                                 textColor={group.text_color}>{group.name}</GroupTag
                             >
-                        </td>
-                        <td class="border-text border-2 text-xl">
-                            <div class="flex items-center justify-center">
+                        </Td>
+                        <Td>
+                            <div class="flex items-center justify-center gap-1.5">
                                 {#if groupStatuses?.[idx] !== false}
-                                    <Icon
+                                    <button
+                                        type="button"
                                         onclick={() => tryUpdateGroup(idx)}
-                                        name="bi-check-lg"
-                                        class="text-green-600"
-                                    />
+                                        class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-emerald-500/30 bg-emerald-500/15 text-emerald-400 transition-colors hover:bg-emerald-500/25"
+                                        title="Uložit"
+                                    >
+                                        <Icon name="bi-check-lg" />
+                                    </button>
                                     {#if staticGroups!.length > idx}
-                                        <Icon
+                                        <button
+                                            type="button"
                                             onclick={() => resetGroup(idx)}
-                                            name="bi-arrow-counterclockwise"
-                                            class="text-red-600"
-                                        />
+                                            class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-white/10 text-amber-400 transition-colors hover:bg-white/10"
+                                            title="Vrátit změny"
+                                        >
+                                            <Icon name="bi-arrow-counterclockwise" />
+                                        </button>
                                     {/if}
                                 {/if}
-                                <Icon
-                                    onclick={() => removeGroup(group.id)}
-                                    name="bi-trash-fill"
-                                    class="text-red-500"
-                                />
-                                <Icon
+                                <button
+                                    type="button"
                                     onclick={() =>
                                         goto(`/${page.params.family}/groups/${group.id}`)}
-                                    name="bi-gear-fill"
-                                    class="text-gray-500"
-                                />
+                                    class="text-text/80 flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-white/10 transition-colors hover:bg-white/10"
+                                    title="Oprávnění skupiny"
+                                >
+                                    <Icon name="bi-gear-fill" />
+                                </button>
+                                <button
+                                    type="button"
+                                    onclick={() => removeGroup(group.id)}
+                                    class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-white/10 text-red-400 transition-colors hover:bg-red-500/15"
+                                    title="Smazat skupinu"
+                                >
+                                    <Icon name="bi-trash-fill" />
+                                </button>
                             </div>
-                        </td>
-                    </tr>
+                        </Td>
+                    </Tr>
                 {/each}
-                <tr class="border-text border-2">
-                    <td class="border-text border-2 text-center text-2xl" colspan={6}>
-                        <Icon onclick={addNew} name="bi-plus-lg" class="text-green-600" />
-                    </td>
-                </tr>
             </tbody>
-        </table>
+        </Table>
     {/if}
 </div>

@@ -22,30 +22,28 @@
     });
 </script>
 
-<div class="h-full w-full flex-1 p-4 md:p-8">
-    <h1 class="text-text mb-6 text-4xl font-bold">Rozvrhy</h1>
+<div class="flex flex-1 flex-col gap-6 pb-6">
+    <h1 class="font-poppins text-2xl font-bold tracking-tight lg:text-3xl">Rozvrhy</h1>
 
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {#if loading}
-            <div class="text-text col-span-full py-10 text-center opacity-50">
+            <div class="text-text/55 col-span-full py-10 text-center text-sm">
                 Načítání...
             </div>
         {:else}
             <!-- My Timetable Card -->
             <a
                 href="/{page.params.family}/timetable/{userId}"
-                class="bg-secondary border-primary hover:bg-accent/10 hover:border-accent group block transform rounded-xl border p-6 transition-all hover:-translate-y-1"
+                class="bg-secondary/80 hover:bg-secondary group hover:border-accent/40 flex items-center gap-4 rounded-2xl border border-white/10 p-5 shadow-xs transition-all duration-150 hover:-translate-y-0.5"
             >
-                <div class="flex items-center space-x-4">
-                    <div
-                        class="bg-primary text-secondary group-hover:bg-accent rounded-full p-4 transition-colors group-hover:text-white"
-                    >
-                        <i class="bi bi-person-lines-fill text-3xl"></i>
-                    </div>
-                    <div>
-                        <h2 class="text-text text-xl font-bold">Můj rozvrh</h2>
-                        <p class="text-text text-base opacity-70">Upravit a zobrazit</p>
-                    </div>
+                <div
+                    class="bg-accent/15 text-accent border-accent/30 group-hover:bg-accent flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border text-2xl transition-colors group-hover:text-white"
+                >
+                    <i class="bi bi-person-lines-fill"></i>
+                </div>
+                <div>
+                    <h2 class="font-poppins text-lg font-bold">Můj rozvrh</h2>
+                    <p class="text-text/60 text-sm">Upravit a zobrazit</p>
                 </div>
             </a>
 
@@ -53,21 +51,19 @@
             {#each users.filter((u) => u.id !== userId) as u (u.id)}
                 <a
                     href="/{page.params.family}/timetable/{u.id}"
-                    class="bg-secondary border-primary hover:bg-accent/10 hover:border-accent group block transform rounded-xl border p-6 transition-all hover:-translate-y-1"
+                    class="bg-secondary/80 hover:bg-secondary group flex items-center gap-4 rounded-2xl border border-white/10 p-5 shadow-xs transition-all duration-150 hover:-translate-y-0.5 hover:border-white/20"
                 >
-                    <div class="flex items-center space-x-4">
-                        <div
-                            class="bg-primary/20 text-primary group-hover:bg-accent rounded-full p-4 transition-colors group-hover:text-white"
-                        >
-                            <i class="bi bi-calendar3 text-3xl"></i>
-                        </div>
-                        <div>
-                            <h2 class="text-text text-xl font-bold">
-                                {u.firstname}
-                                {u.lastname}
-                            </h2>
-                            <p class="text-text text-base opacity-70">@{u.username}</p>
-                        </div>
+                    <div
+                        class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-sky-500/30 bg-sky-500/15 text-2xl text-sky-400 transition-colors group-hover:bg-sky-500 group-hover:text-white"
+                    >
+                        <i class="bi bi-calendar3"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <h2 class="font-poppins truncate text-lg font-bold">
+                            {u.firstname}
+                            {u.lastname}
+                        </h2>
+                        <p class="text-text/60 truncate text-sm">@{u.username}</p>
                     </div>
                 </a>
             {/each}
@@ -75,8 +71,10 @@
     </div>
 
     {#if !loading && users.length === 0}
-        <div class="text-text mt-10 text-center opacity-70">
-            <i class="bi bi-emoji-frown mb-2 block text-4xl"></i>
+        <div
+            class="bg-secondary/60 text-text/65 rounded-2xl border border-white/10 p-8 text-center text-sm"
+        >
+            <i class="bi bi-emoji-frown mb-2 block text-3xl"></i>
             <p>Zatím nikdo nemá vytvořený rozvrh.</p>
         </div>
     {/if}

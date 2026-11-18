@@ -12,7 +12,6 @@
     import { twMerge } from 'tailwind-merge';
     import ClickOutside from '../clickOutside.svelte';
     import Group from '../group.svelte';
-    import Title from '../headers/Title.svelte';
     import Icon from '../Icon.svelte';
 
     const {
@@ -202,101 +201,195 @@
             });
         }
     };
+
+    const getInitials = (firstname: string, lastname: string) => {
+        return `${firstname.charAt(0)}${lastname.charAt(0)}`.toUpperCase();
+    };
 </script>
 
 <svelte:head>
     <title>{route?.name ?? ''} | {familyName} | FamilyAPP</title>
 </svelte:head>
 
-<div class="flex items-center gap-2 p-2 md:hidden">
-    <div class="relative">
-        <Icon
+<!-- Mobile Sticky Top Bar -->
+<header
+    class="bg-secondary/90 sticky top-0 z-40 flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3 backdrop-blur-md md:hidden"
+>
+    <div class="flex items-center gap-3">
+        <button
+            type="button"
             onclick={() => (opened = true)}
-            name="bi-list"
-            class="border-primary bg-secondary hover:bg-accent active:bg-accent rounded-md border-[1px] px-1.5 py-0.5 text-3xl font-bold transition-colors duration-200"
-        />
-        {#if totalBadges > 0}
-            <span
-                class="bg-accent text-background absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[11px] font-bold shadow"
-            >
-                {totalBadges > 99 ? '99+' : totalBadges}
-            </span>
-        {/if}
+            class="bg-background/70 hover:bg-accent/15 hover:border-accent/40 relative flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl border border-white/15 transition-colors"
+            aria-label="Otevřít menu"
+        >
+            <Icon name="bi-list" class="text-2xl" />
+            {#if totalBadges > 0}
+                <span
+                    class="bg-accent absolute -top-1.5 -right-1.5 flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[11px] font-bold text-white shadow"
+                >
+                    {totalBadges > 99 ? '99+' : totalBadges}
+                </span>
+            {/if}
+        </button>
+        <div class="flex flex-col">
+            <span class="text-text/50 text-xs font-medium">{familyName}</span>
+            <h1 class="font-poppins text-lg leading-tight font-bold">
+                {_state.title || 'FamilyAPP'}
+            </h1>
+        </div>
     </div>
-    <Title>{_state.title}</Title>
-</div>
 
+    <button
+        type="button"
+        onclick={togglePush}
+        class={[
+            'flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl border text-base transition-colors',
+            _state.pushEnabled
+                ? 'border-emerald-500/30 bg-emerald-500/15 text-emerald-400'
+                : 'border-white/15 bg-white/5 text-red-400'
+        ]}
+        title={_state.pushEnabled ? 'Notifikace zapnuty' : 'Notifikace vypnuty'}
+        aria-label="Přepnout oznámení"
+    >
+        <Icon name={_state.pushEnabled ? 'bi-bell-fill' : 'bi-bell-slash'} />
+    </button>
+</header>
+
+<!-- Mobile Backdrop -->
+{#if opened}
+    <div
+        class="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs md:hidden"
+        aria-hidden="true"
+    ></div>
+{/if}
+
+<!-- Sidebar Navigation -->
 <ClickOutside
     clickoutside={() => (opened = false)}
     class={twMerge(
-        'bg-secondary absolute top-0 left-0 z-50 flex min-h-screen w-1/2 min-w-96 flex-col p-2 transition-transform duration-500 md:static md:w-auto md:translate-x-0',
-        !opened ? '-translate-x-full' : ''
+        'bg-secondary/95 fixed top-0 left-0 z-50 flex h-screen w-72 flex-col border-r border-white/10 p-4 backdrop-blur-xl transition-transform duration-300 md:sticky md:top-0 md:z-10 md:w-72 md:shrink-0 md:translate-x-0',
+        !opened ? '-translate-x-full' : 'translate-x-0'
     )}
 >
-    <div class="flex flex-row justify-between px-2 md:justify-end">
-        <Icon
+    <!-- Brand + Mobile Close -->
+    <div class="mb-4 flex items-center justify-between gap-2">
+        <a href={BASE} onclick={() => (opened = false)} class="flex items-center gap-2.5">
+            <div
+                class="bg-accent/15 text-accent border-accent/30 flex h-9 w-9 items-center justify-center rounded-xl border text-lg shadow-xs"
+            >
+                <Icon name="bi-house-heart-fill" />
+            </div>
+            <div class="flex flex-col">
+                <span
+                    class="font-poppins text-base leading-tight font-bold tracking-tight"
+                    >FamilyAPP</span
+                >
+                <span class="text-text/60 max-w-40 truncate text-xs font-medium"
+                    >{familyName}</span
+                >
+            </div>
+        </a>
+
+        <button
+            type="button"
             onclick={() => (opened = false)}
-            name="bi-x-lg"
-            class="text-3xl font-bold md:hidden"
-        />
-        <Icon onclick={logout} name="bi-box-arrow-in-right" class="text-3xl font-bold" />
+            class="text-text/70 hover:text-text flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg hover:bg-white/10 md:hidden"
+            aria-label="Zavřít menu"
+        >
+            <Icon name="bi-x-lg" class="text-lg" />
+        </button>
     </div>
-    <div class="flex flex-col items-center justify-center gap-2">
-        <Title>{familyName}</Title>
-        {#if logged(_state.userState)}
-            {@const data = _state.userState.data}
-            <h1 class="font-poppins font-bold">
-                {formatUser(data)}
+
+    <!-- User Profile Card -->
+    {#if logged(_state.userState)}
+        {@const data = _state.userState.data}
+        <div
+            class="bg-background/60 mb-4 flex flex-col gap-2.5 rounded-xl border border-white/10 p-3"
+        >
+            <div class="flex items-center gap-2.5">
+                <div
+                    class="bg-accent/20 text-accent flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold"
+                >
+                    {getInitials(data.firstname, data.lastname)}
+                </div>
+                <div class="min-w-0 flex-1">
+                    <p class="truncate text-sm font-bold">{formatUser(data)}</p>
+                    <p class="text-text/50 truncate text-xs">@{data.username}</p>
+                </div>
+                <button
+                    type="button"
+                    onclick={logout}
+                    class="text-text/60 flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg transition-colors hover:bg-red-500/15 hover:text-red-400"
+                    title="Odhlásit se"
+                    aria-label="Odhlásit se"
+                >
+                    <Icon name="bi-box-arrow-right" class="text-lg" />
+                </button>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-between gap-2">
                 {#if data.group}
                     {@const group = data.group}
                     <Group textColor={group.text_color} backgroundColor={group.bg_color}>
                         {group.name}
                     </Group>
+                {:else}
+                    <span class="text-text/40 text-xs">Bez skupiny</span>
                 {/if}
-            </h1>
-        {/if}
-        <h1 class="font-poppins font-bold">
-            Oznámení: <Icon
-                onclick={togglePush}
-                name={_state.pushEnabled ? 'bi-bell-fill' : 'bi-bell-slash'}
-                class={_state.pushEnabled ? 'text-green-500' : 'text-red-500'}
-            />
-        </h1>
-    </div>
-    <hr class="my-4" />
-    <div class="flex flex-1 flex-col items-center justify-center gap-2">
-        <div class="flex h-full w-max flex-1 flex-col gap-2 overflow-y-auto">
-            {#each routes.filter((r) => {
-                const perms = r.permissions ? r.permissions.some( (perm) => permissions.hasPermission(perm) ) || (r.ownerAllowed && isFamilyOwner) : true;
-                const hidden = r.hidden !== undefined ? !r.hidden : true;
-                const haOk = r.requiresHa ? haEnabled : true;
 
-                return perms && hidden && haOk;
-            }) as _route, i (i)}
-                {@const badgeCount = _route.path
-                    ? badgeStore.counts[_route.path] || 0
-                    : 0}
-                <a
-                    class:border-b-2={_route.name == route?.name}
-                    class:hover:after:scale-x-100={_route.name != route?.name}
-                    href="{BASE}{_route.path}"
-                    onclick={() => {
-                        opened = false;
-                        if (_route.path) badgeStore.clear(_route.path);
-                    }}
-                    class="border-b-text font-poppins after:bg-text flex w-max items-center gap-2 text-2xl font-bold after:block after:h-[2px] after:w-full after:origin-left after:scale-x-0 after:transition-transform after:duration-200"
+                <button
+                    type="button"
+                    onclick={togglePush}
+                    class={[
+                        'inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors',
+                        _state.pushEnabled
+                            ? 'border-emerald-500/30 bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25'
+                            : 'border-white/10 bg-white/5 text-red-400 hover:bg-white/10'
+                    ]}
                 >
-                    <Icon name={_route.icon} />
-                    <span>{_route.name}</span>
-                    {#if badgeCount > 0}
-                        <span
-                            class="bg-accent ml-2 inline-flex items-center justify-center rounded-full px-2 py-0.5 text-xs font-bold text-white shadow"
-                        >
-                            {badgeCount > 99 ? '99+' : badgeCount}
-                        </span>
-                    {/if}
-                </a>
-            {/each}
+                    <Icon name={_state.pushEnabled ? 'bi-bell-fill' : 'bi-bell-slash'} />
+                    <span>{_state.pushEnabled ? 'Zapnuto' : 'Vypnuto'}</span>
+                </button>
+            </div>
         </div>
-    </div>
+    {/if}
+
+    <!-- Navigation Links -->
+    <nav class="flex flex-1 flex-col gap-1 overflow-y-auto pr-1">
+        {#each routes.filter((r) => {
+            const perms = r.permissions ? r.permissions.some( (perm) => permissions.hasPermission(perm) ) || (r.ownerAllowed && isFamilyOwner) : true;
+            const hidden = r.hidden !== undefined ? !r.hidden : true;
+            const haOk = r.requiresHa ? haEnabled : true;
+
+            return perms && hidden && haOk;
+        }) as _route, i (i)}
+            {@const badgeCount = _route.path ? badgeStore.counts[_route.path] || 0 : 0}
+            {@const isActive = _route.name === route?.name}
+            <a
+                href="{BASE}{_route.path}"
+                onclick={() => {
+                    opened = false;
+                    if (_route.path) badgeStore.clear(_route.path);
+                }}
+                class={[
+                    'font-poppins flex items-center justify-between gap-2 rounded-xl border px-3 py-2.5 text-sm font-semibold transition-all duration-150',
+                    isActive
+                        ? 'bg-accent/15 text-accent border-accent/30 shadow-xs'
+                        : 'text-text/75 hover:text-text border-transparent hover:bg-white/[0.06]'
+                ]}
+            >
+                <span class="flex items-center gap-3">
+                    <Icon name={_route.icon} class="text-base" />
+                    <span>{_route.name}</span>
+                </span>
+                {#if badgeCount > 0}
+                    <span
+                        class="bg-accent inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-bold text-white shadow"
+                    >
+                        {badgeCount > 99 ? '99+' : badgeCount}
+                    </span>
+                {/if}
+            </a>
+        {/each}
+    </nav>
 </ClickOutside>

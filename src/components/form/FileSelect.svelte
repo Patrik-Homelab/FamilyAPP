@@ -1,6 +1,7 @@
 <script lang="ts">
     import { twMerge } from 'tailwind-merge';
     import { Entry, Slider } from '.';
+    import Icon from '../Icon.svelte';
     import Image from '../Image.svelte';
 
     let {
@@ -20,16 +21,16 @@
     let input: HTMLInputElement;
 
     const imageMimeTypes = [
-        'image/jpeg', // JPEG images
-        'image/png', // PNG images
-        'image/gif', // GIF images
-        'image/bmp', // BMP images
-        'image/webp', // WebP images
-        'image/tiff', // TIFF images
-        'image/svg+xml', // SVG images
-        'image/x-icon', // ICO images
-        'image/heif', // HEIF images (high efficiency image format)
-        'image/heic' // HEIC images (high efficiency image coding)
+        'image/jpeg',
+        'image/png',
+        'image/gif',
+        'image/bmp',
+        'image/webp',
+        'image/tiff',
+        'image/svg+xml',
+        'image/x-icon',
+        'image/heif',
+        'image/heic'
     ];
 
     let fileInfos = $state<
@@ -116,13 +117,8 @@
     capture={capture ? 'environment' : undefined}
 />
 
-<section class="flex flex-col gap-2">
-    <Entry
-        id="input-capture"
-        label="Použít kameru pro zachycení?"
-        row={true}
-        small={true}
-    >
+<section class="flex flex-col gap-3">
+    <Entry id="input-capture" label="Použít fotoaparát" row={true} small={true}>
         <Slider id="input-capture" bind:value={capture} />
     </Entry>
 
@@ -132,31 +128,35 @@
         {onclick}
         {onkeypress}
         class={twMerge(
-            'border-text bg-secondary font-poppins flex w-full cursor-pointer flex-wrap items-center justify-center gap-2 rounded-md border-2 p-2 text-xl font-bold lg:text-2xl',
+            'bg-background/50 hover:border-accent/60 hover:bg-secondary/60 flex w-full cursor-pointer flex-wrap items-center justify-center gap-3 rounded-xl border-2 border-dashed border-white/20 p-5 text-center transition-all',
             cls
         )}
     >
         {#if value.length == 0}
-            Vyber soubor{#if multiple}y{/if}
+            <div class="flex flex-col items-center gap-1.5 py-2">
+                <Icon name="bi-cloud-arrow-up" class="text-accent text-3xl" />
+                <span class="font-poppins text-base font-semibold">
+                    Vybrat soubor{#if multiple}y{/if}
+                </span>
+                <span class="text-text/50 text-xs">
+                    Klikni pro výběr obrázku nebo souboru
+                </span>
+            </div>
         {:else}
             {#each fileInfos as file (`${file.name}-${file.size}`)}
                 <div
-                    class="divide-text border-text flex flex-col divide-y-2 rounded-md border-2"
+                    class="bg-secondary/80 flex flex-col overflow-hidden rounded-xl border border-white/15 shadow-sm"
                 >
                     {#if file.image}
-                        <div class="mx-auto h-auto md:max-w-72 lg:max-w-80 xl:max-w-96">
-                            <Image
-                                class="rounded-t-[4px]"
-                                name={file.data}
-                                alt="File preview"
-                            />
+                        <div class="mx-auto h-auto max-w-64">
+                            <Image name={file.data} alt="File preview" />
                         </div>
                     {/if}
-                    <div class="justfiy-center flex flex-col items-center p-1">
-                        <h1 class="text-lg break-all lg:text-xl">
+                    <div class="flex flex-col items-center border-t border-white/10 p-2">
+                        <h1 class="text-sm font-semibold break-all">
                             {file.name}
                         </h1>
-                        <h2 class="text-base font-medium lg:text-lg">
+                        <h2 class="text-text/60 text-xs">
                             {formatSize(file.size)}
                         </h2>
                     </div>

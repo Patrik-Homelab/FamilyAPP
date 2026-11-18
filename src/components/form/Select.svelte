@@ -22,7 +22,7 @@
     bind:this={el}
     {...props}
     class={twMerge(
-        'bg-secondary text-text placeholder:text-text invalid:border-accent focus:border-primary rounded-md border-2 border-white px-4 py-1 text-2xl font-bold outline-hidden transition-colors duration-200 lg:text-3xl',
+        'bg-background/75 text-text focus:border-accent focus:ring-accent/25 w-full cursor-pointer rounded-xl border border-white/15 px-3.5 py-2.5 text-base font-medium outline-hidden transition-all duration-150 invalid:border-red-500/80 focus:ring-2',
         resolveSvelteClass(cls ?? '')
     )}
     bind:value

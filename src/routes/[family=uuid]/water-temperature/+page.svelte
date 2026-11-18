@@ -498,77 +498,156 @@
 
 {#if !data.haEnabled}
     <section
-        class="flex flex-1 flex-col items-center justify-center gap-4 p-4 text-center"
+        class="bg-secondary/70 mx-auto my-auto flex max-w-lg flex-col items-center justify-center gap-4 rounded-2xl border border-white/10 p-8 text-center shadow-xl"
     >
-        <Icon name="bi-thermometer-half" class="text-5xl opacity-50" />
-        <h2 class="text-2xl font-bold">
-            Sledování teploty vody není pro tuto rodinu nastaveno
+        <div
+            class="bg-accent/15 text-accent border-accent/30 flex h-14 w-14 items-center justify-center rounded-2xl border text-3xl"
+        >
+            <Icon name="bi-thermometer-half" />
+        </div>
+        <h2 class="font-poppins text-xl font-bold lg:text-2xl">
+            Sledování teploty vody není nastaveno
         </h2>
-        <p class="max-w-md opacity-75">
+        <p class="text-text/70 text-sm">
             Pro zobrazení grafů teploty je potřeba v nastavení rodiny připojit Home
             Assistant a vybrat alespoň jeden senzor.
         </p>
         {#if data.canConfigureFamily}
             <Button
                 onclick={() => goto(`/${page.params.family}/family-settings`)}
-                class="w-auto px-4"
+                class="w-auto px-5"
             >
                 Otevřít nastavení rodiny
             </Button>
         {/if}
     </section>
 {:else}
-    <section class="flex flex-1 flex-col">
-        <div class="flex w-full items-center gap-2 text-2xl">
-            <Icon
+    <section class="flex flex-1 flex-col gap-4 pb-6">
+        <!-- Toolbar -->
+        <div
+            class="bg-secondary/80 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 p-3 shadow-sm"
+        >
+            <button
+                type="button"
                 onclick={toggleNotifications}
-                name={subscribed ? 'bi-bell-fill' : 'bi-bell'}
-                class="mr-auto cursor-pointer"
-            />
-            <Icon onclick={previousDay} name="bi-chevron-left" class="cursor-pointer" />
-            <select bind:value={year}>
-                <!-- eslint-disable-next-line @typescript-eslint/no-unused-vars -->
-                {#each Array.from({ length: 10 }) as _, i (i)}
-                    {@const y = year - 5 + i}
-                    <option value={y}>{y}</option>
-                {/each}
-            </select>
-            <MonthSelector bind:value={month} />
-            <select bind:value={day}>
-                <!-- eslint-disable-next-line @typescript-eslint/no-unused-vars -->
-                {#each Array.from({ length: maxDays }) as _, i (i)}
-                    <option value={i + 1}>{i + 1}</option>
-                {/each}
-            </select>
-            <Icon onclick={nextDay} name="bi-chevron-right" class="cursor-pointer" />
-            <Icon
-                name="bi-zoom-out"
-                onclick={resetZoom}
-                class="cursor-pointer p-1 hover:text-amber-400"
-                title="Obnovit přiblížení"
-            />
-            <Icon
-                name="bi-arrow-counterclockwise"
-                onclick={resetDay}
-                class="ml-auto cursor-pointer"
-                title="Dnešní den"
-            />
+                class={[
+                    'inline-flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 text-sm font-semibold transition-colors',
+                    subscribed
+                        ? 'border-emerald-500/30 bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25'
+                        : 'text-text/75 border-white/15 bg-white/5 hover:bg-white/10'
+                ]}
+            >
+                <Icon name={subscribed ? 'bi-bell-fill' : 'bi-bell'} />
+                <span class="hidden sm:inline"
+                    >{subscribed ? 'Upozornění zapnuta' : 'Zapnout upozornění'}</span
+                >
+            </button>
+
+            <div class="flex flex-wrap items-center gap-1.5">
+                <button
+                    type="button"
+                    onclick={previousDay}
+                    class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl border border-white/10 transition-colors hover:bg-white/10"
+                    aria-label="Předchozí den"
+                >
+                    <Icon name="bi-chevron-left" />
+                </button>
+                <select
+                    bind:value={year}
+                    class="bg-secondary text-text rounded-xl border border-white/15 px-2.5 py-1.5 text-sm font-semibold outline-hidden"
+                >
+                    <!-- eslint-disable-next-line @typescript-eslint/no-unused-vars -->
+                    {#each Array.from({ length: 10 }) as _, i (i)}
+                        {@const y = year - 5 + i}
+                        <option value={y}>{y}</option>
+                    {/each}
+                </select>
+                <MonthSelector class="text-sm font-semibold" bind:value={month} />
+                <select
+                    bind:value={day}
+                    class="bg-secondary text-text rounded-xl border border-white/15 px-2.5 py-1.5 text-sm font-semibold outline-hidden"
+                >
+                    <!-- eslint-disable-next-line @typescript-eslint/no-unused-vars -->
+                    {#each Array.from({ length: maxDays }) as _, i (i)}
+                        <option value={i + 1}>{i + 1}</option>
+                    {/each}
+                </select>
+                <button
+                    type="button"
+                    onclick={nextDay}
+                    class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl border border-white/10 transition-colors hover:bg-white/10"
+                    aria-label="Další den"
+                >
+                    <Icon name="bi-chevron-right" />
+                </button>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button
+                    type="button"
+                    onclick={resetZoom}
+                    class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl border border-white/15 text-amber-400 transition-colors hover:bg-white/10"
+                    title="Obnovit přiblížení"
+                >
+                    <Icon name="bi-zoom-out" />
+                </button>
+                <button
+                    type="button"
+                    onclick={resetDay}
+                    class="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-xl border border-white/15 px-3 text-sm font-semibold transition-colors hover:bg-white/10"
+                    title="Dnešní den"
+                >
+                    <Icon name="bi-arrow-counterclockwise" />
+                    <span class="hidden sm:inline">Dnes</span>
+                </button>
+            </div>
         </div>
-        <div class="mx-auto flex flex-col text-2xl font-bold">
-            <h2>
-                Poslední aktualizace: {lastUpdate.toLocaleString('cs-CZ', {
-                    hour: '2-digit',
-                    minute: '2-digit'
-                })}
-            </h2>
-            <h2>Nejvíce dnes: {topToday} °C</h2>
+
+        <!-- KPI Summary Cards -->
+        <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div
+                class="bg-secondary/75 flex flex-col gap-1 rounded-2xl border border-white/10 p-3.5"
+            >
+                <span class="text-text/55 text-xs font-medium">Poslední aktualizace</span>
+                <span class="font-poppins text-lg font-bold">
+                    {lastUpdate.toLocaleString('cs-CZ', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    })}
+                </span>
+            </div>
+            <div
+                class="bg-secondary/75 flex flex-col gap-1 rounded-2xl border border-white/10 p-3.5"
+            >
+                <span class="text-text/55 text-xs font-medium">Maximum dnes</span>
+                <span class="font-poppins text-lg font-bold text-amber-400">
+                    {topToday} °C
+                </span>
+            </div>
             {#each sensorSummaries as s (s.id)}
-                <h2 style="color: {s.color}">
-                    {s.label}: {s.lastValue !== null ? `${s.lastValue} °C` : '—'}
-                </h2>
+                <div
+                    class="bg-secondary/75 flex flex-col gap-1 rounded-2xl border border-white/10 p-3.5"
+                >
+                    <span
+                        class="text-text/65 flex items-center gap-1.5 truncate text-xs font-medium"
+                    >
+                        <span
+                            class="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
+                            style="background-color: {s.color};"
+                        ></span>
+                        <span class="truncate">{s.label}</span>
+                    </span>
+                    <span class="font-poppins text-lg font-bold" style="color: {s.color}">
+                        {s.lastValue !== null ? `${s.lastValue} °C` : '—'}
+                    </span>
+                </div>
             {/each}
         </div>
-        <div class="flex-1">
+
+        <!-- Chart Canvas -->
+        <div
+            class="bg-secondary/75 min-h-[380px] flex-1 rounded-2xl border border-white/10 p-4 shadow-sm"
+        >
             <canvas bind:this={canvas}></canvas>
         </div>
     </section>

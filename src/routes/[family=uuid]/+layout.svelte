@@ -135,7 +135,7 @@
     });
 </script>
 
-<section class="flex flex-1 flex-col md:flex-row">
+<section class="flex min-h-screen flex-1 flex-col md:flex-row">
     <Navigation
         familyUuid={data.familyUuid}
         familyName={logged(_state.userState)
@@ -146,7 +146,7 @@
             : data.haEnabled}
         isFamilyOwner={data.isFamilyOwner}
     />
-    <div class="flex w-full flex-1 flex-col p-2">
+    <div class="mx-auto flex w-full max-w-6xl flex-1 flex-col p-4 md:p-6 lg:p-8">
         {@render children()}
         <Footer version={data.version} />
     </div>

@@ -1,6 +1,8 @@
 <script lang="ts">
-    import { Select } from '$/components/form';
+    import { Button, Select } from '$/components/form';
+    import Title from '$/components/headers/Title.svelte';
     import Icon from '$/components/Icon.svelte';
+    import { Table, Td, Th, Tr } from '$/components/table';
     import { API } from '$/lib/api';
     import { SwalAlert } from '$/lib/functions';
     import type { User } from '$/types/database';
@@ -84,45 +86,57 @@
     };
 </script>
 
-<div class="mt-2 h-full w-full flex-1">
+<div class="flex flex-1 flex-col gap-5 pb-6">
+    <div
+        class="bg-secondary/80 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 p-4 shadow-sm"
+    >
+        <Title class="text-xl lg:text-2xl">Správa uživatelů</Title>
+        <Button
+            onclick={createInvitation}
+            class="w-auto bg-emerald-600 hover:bg-emerald-500"
+        >
+            <Icon name="bi-person-plus-fill" />
+            <span>Vytvořit pozvánku</span>
+        </Button>
+    </div>
+
     {#if users}
-        <table class="border-text w-full border-collapse border-2">
+        <Table>
             <thead>
-                <tr class="border-text border-2">
-                    <th class="border-text border-2">Id</th>
-                    <th class="border-text border-2">Jméno</th>
-                    <th class="border-text border-2">Skupina</th>
-                </tr>
+                <Tr>
+                    <Th>ID</Th>
+                    <Th class="text-left">Uživatel</Th>
+                    <Th>Skupina</Th>
+                </Tr>
             </thead>
-            <tbody>
+            <tbody class="text-center">
                 {#each users as user (user.id)}
-                    <tr class="border-text border-2">
-                        <td class="border-text border-2">{user.id}</td>
-                        <td class="border-text border-2">{user.username}</td>
-                        <td class="flex justify-center">
-                            <Select
-                                class="w-full border-none text-center lg:w-auto"
-                                bind:value={user.group_id}
-                                onchange={() => updateGroup(user.id, user.group_id)}
-                            >
-                                <option value={null} selected>Žádná</option>
-                                {#each groups as group (group.id)}
-                                    <option value={group.id}>{group.name}</option>
-                                {/each}
-                            </Select>
-                        </td>
-                    </tr>
+                    <Tr>
+                        <Td class="text-text/60">{user.id}</Td>
+                        <Td class="text-left">
+                            <div class="font-semibold">
+                                {user.firstname}
+                                {user.lastname}
+                            </div>
+                            <div class="text-text/55 text-xs">@{user.username}</div>
+                        </Td>
+                        <Td>
+                            <div class="flex justify-center">
+                                <Select
+                                    class="w-full max-w-52 py-1.5 text-center text-sm"
+                                    bind:value={user.group_id}
+                                    onchange={() => updateGroup(user.id, user.group_id)}
+                                >
+                                    <option value={null} selected>Žádná</option>
+                                    {#each groups as group (group.id)}
+                                        <option value={group.id}>{group.name}</option>
+                                    {/each}
+                                </Select>
+                            </div>
+                        </Td>
+                    </Tr>
                 {/each}
-                <tr>
-                    <td class="border-text border-2 text-center text-2xl" colspan={3}>
-                        <Icon
-                            onclick={createInvitation}
-                            name="bi-plus-lg"
-                            class="text-green-600"
-                        />
-                    </td>
-                </tr>
             </tbody>
-        </table>
+        </Table>
     {/if}
 </div>

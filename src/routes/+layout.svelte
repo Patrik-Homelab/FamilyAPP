@@ -39,7 +39,7 @@
 </script>
 
 <main
-    class="xl:font-xl bg-background font-roboto text-text flex h-full min-h-screen w-full flex-col overflow-x-hidden text-lg lg:text-xl"
+    class="bg-background font-roboto text-text flex min-h-screen w-full flex-col overflow-x-hidden bg-[radial-gradient(ellipse_at_top,_rgba(239,68,68,0.09),_transparent_55%)] text-base antialiased"
 >
     {@render children()}
 </main>

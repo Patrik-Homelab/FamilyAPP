@@ -74,28 +74,34 @@
     };
 </script>
 
-<Icon
-    onclick={() => goto(`/${page.params.family}/shoppinglist`)}
-    name="bi-arrow-return-left"
-    class="text-2xl lg:text-3xl"
-/>
-<section
-    class="md:border-accent md:bg-secondary flex flex-1 flex-col items-center justify-center gap-4 p-4 md:m-auto md:flex-0 md:rounded-md md:border-2 md:p-8"
->
-    <Title>Nová položka</Title>
-    <Entry id="name" label="Název" error={data.name.error}>
-        <Input id="name" bind:value={data.name.value} invalid={data.name.error} />
-    </Entry>
-    <Entry id="count" label="Počet" error={data.count.error}>
-        <Input
-            id="count"
-            type="number"
-            bind:value={data.count.value}
-            invalid={data.count.error}
-        />
-    </Entry>
-    <Entry id="image" label="Obrázek" note="(nepovinné)" error={data.image.error}>
-        <FileSelect id="image" bind:value={data.image.value} accept="image/*" />
-    </Entry>
-    <Button onclick={handle}>Přidat</Button>
-</section>
+<div class="mx-auto flex w-full max-w-lg flex-1 flex-col gap-4 py-4">
+    <button
+        type="button"
+        onclick={() => goto(`/${page.params.family}/shoppinglist`)}
+        class="text-text/75 hover:text-text bg-secondary/70 inline-flex w-max cursor-pointer items-center gap-2 rounded-xl border border-white/10 px-3 py-1.5 text-sm font-semibold transition-colors"
+    >
+        <Icon name="bi-arrow-return-left" />
+        <span>Zpět na nákupní seznam</span>
+    </button>
+
+    <section
+        class="bg-secondary/90 flex flex-col gap-4 rounded-2xl border border-white/10 p-6 shadow-xl"
+    >
+        <Title class="text-xl lg:text-2xl">Nová položka</Title>
+        <Entry id="name" label="Název" error={data.name.error}>
+            <Input id="name" bind:value={data.name.value} invalid={data.name.error} />
+        </Entry>
+        <Entry id="count" label="Počet" error={data.count.error}>
+            <Input
+                id="count"
+                type="number"
+                bind:value={data.count.value}
+                invalid={data.count.error}
+            />
+        </Entry>
+        <Entry id="image" label="Obrázek" note="(nepovinné)" error={data.image.error}>
+            <FileSelect id="image" bind:value={data.image.value} accept="image/*" />
+        </Entry>
+        <Button onclick={handle}>Přidat na seznam</Button>
+    </section>
+</div>
