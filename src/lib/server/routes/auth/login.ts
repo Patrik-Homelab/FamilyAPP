@@ -1,12 +1,11 @@
 import { z } from 'zod';
 import { procedure } from '../../api';
-import { conn, jwt } from '../../variables';
+import { conn } from '../../variables';
 import type { ErrorApiResponse } from '@patrick115/sveltekitapi';
 import bcrypt from 'bcrypt';
-import { COOKIE_EXPIRE } from '$env/static/private';
 import type { ResponseWithData, UserData } from '$/types/types';
 import type { ErrorList } from '$/lib/errors';
-import { getUserPermissions } from '../../functions';
+import { getUserFamilyContext, setSessionCookie } from '../../functions';
 
 export default procedure.POST.input(
     z.object({
@@ -16,7 +15,7 @@ export default procedure.POST.input(
 ).query(async ({ input, ev: { cookies } }) => {
     const data = await conn
         .selectFrom('user')
-        .selectAll()
+        .select(['id', 'password'])
         .where('username', '=', input.username)
         .executeTakeFirst();
     if (!data) {
@@ -35,17 +34,16 @@ export default procedure.POST.input(
         } satisfies ErrorApiResponse;
     }
 
-    const userData = {
-        ...data,
-        password: undefined,
-        ...(await getUserPermissions(data.id))
-    };
+    const userData = await getUserFamilyContext(data.id);
+    if (!userData) {
+        return {
+            status: false,
+            code: 400,
+            message: 'auth.login.username' satisfies ErrorList
+        } satisfies ErrorApiResponse;
+    }
 
-    const cookie = jwt.setCookie(userData);
-    cookies.set('session', cookie, {
-        path: '/',
-        maxAge: parseInt(COOKIE_EXPIRE)
-    });
+    setSessionCookie(cookies, userData);
 
     return {
         status: true,

@@ -3,6 +3,7 @@ import auth from './auth';
 import calendar from './calendar';
 import debt from './debt';
 import energyface from './energyface';
+import family from './family';
 import groups from './groups';
 import invitation from './invitation';
 import notifications from './notifications';
@@ -15,6 +16,7 @@ import users from './users';
 
 export const r = router({
     auth,
+    family,
     permissions,
     groups,
     users,

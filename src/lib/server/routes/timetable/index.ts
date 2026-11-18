@@ -9,25 +9,15 @@ import { conn } from '../../variables';
 export default [
     // GET: List all users who have timetable entries (or just all users to be safe?)
     // Let's just return all users so we can switch to anyone easily.
-    loggedProcedure.GET.query(async () => {
+    loggedProcedure.GET.query(async ({ ctx }) => {
         try {
-            // Get users who have at least one timetable entry
-            const usersWithEntries = await conn
-                .selectFrom('timetable_entry')
-                .select('user_id')
-                .distinct()
-                .execute();
-
-            const userIds = usersWithEntries.map((u) => u.user_id);
-
-            if (userIds.length === 0) {
-                return { status: true, data: [] } satisfies ResponseWithData<[]>;
-            }
-
+            // Get users in the same family who have at least one timetable entry
             const users = await conn
                 .selectFrom('user')
+                .innerJoin('timetable_entry', 'timetable_entry.user_id', 'user.id')
                 .select(['user.id', 'user.username', 'user.firstname', 'user.lastname'])
-                .where('user.id', 'in', userIds)
+                .where('user.family_id', '=', ctx.family_id)
+                .distinct()
                 .execute();
 
             return { status: true, data: users } satisfies ResponseWithData<typeof users>;
@@ -49,6 +39,23 @@ export default [
     ).query(async ({ input, ctx }) => {
         try {
             const targetUserId = input.userId ?? ctx.id;
+
+            if (targetUserId !== ctx.id) {
+                const targetUser = await conn
+                    .selectFrom('user')
+                    .select('id')
+                    .where('id', '=', targetUserId)
+                    .where('family_id', '=', ctx.family_id)
+                    .executeTakeFirst();
+
+                if (!targetUser) {
+                    return {
+                        status: false,
+                        code: 404,
+                        message: 'Uživatel nenalezen'
+                    } satisfies ErrorApiResponse;
+                }
+            }
 
             const timetable = await conn
                 .selectFrom('timetable_entry')

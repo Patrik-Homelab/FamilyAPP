@@ -15,6 +15,7 @@ export default loggedProcedure.PATCH.input(
         .selectFrom('present')
         .selectAll()
         .where('id', '=', input.id)
+        .where('family_id', '=', ctx.family_id)
         .executeTakeFirst();
 
     if (!present) {
@@ -50,12 +51,14 @@ export default loggedProcedure.PATCH.input(
                 bought: input.bought
             })
             .where('id', '=', input.id)
+            .where('family_id', '=', ctx.family_id)
             .execute();
 
         const newData = await conn
             .selectFrom('present')
             .selectAll()
             .where('id', '=', input.id)
+            .where('family_id', '=', ctx.family_id)
             .executeTakeFirst();
 
         if (!newData) {

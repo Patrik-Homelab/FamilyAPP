@@ -4,7 +4,7 @@ import { conn } from '../../variables';
 import type { ErrorApiResponse } from '@patrick115/sveltekitapi';
 import type { ResponseWithData, Response } from '$/types/types';
 import type { ErrorList } from '$/lib/errors';
-import { sendNotificationToAll } from '../../functions';
+import { sendNotificationToFamily } from '../../functions';
 import { formatUser, toDate } from '$/lib/functions';
 
 export default [
@@ -13,11 +13,12 @@ export default [
             from: z.coerce.date(),
             to: z.coerce.date()
         })
-    ).query(async ({ input }) => {
+    ).query(async ({ input, ctx }) => {
         try {
             const data = await conn
                 .selectFrom('calendar')
                 .selectAll()
+                .where('family_id', '=', ctx.family_id)
                 //we want to find all events, that start or end is in the range
                 .where((eb) =>
                     eb.or([
@@ -65,6 +66,7 @@ export default [
             await conn
                 .insertInto('calendar')
                 .values({
+                    family_id: ctx.family_id,
                     name: input.name,
                     description: input.description,
                     from: input.from,
@@ -83,11 +85,11 @@ export default [
                     baseText += `probíhající od ${toDate(input.from)} do ${toDate(input.to)}.`;
                 }
 
-                sendNotificationToAll({
+                sendNotificationToFamily(ctx.family_id, {
                     title: 'Nová událost',
                     body: baseText,
                     data: {
-                        url: '/app/calendar'
+                        url: `/${ctx.family_uuid}/calendar`
                     }
                 });
             }
@@ -110,6 +112,7 @@ export default [
                 .selectFrom('calendar')
                 .select('name')
                 .where('id', '=', input)
+                .where('family_id', '=', ctx.family_id)
                 .executeTakeFirst();
 
             if (!event) {
@@ -124,6 +127,7 @@ export default [
                 .deleteFrom('calendar')
                 .where('id', '=', input)
                 .where('user_id', '=', ctx.id)
+                .where('family_id', '=', ctx.family_id)
                 .executeTakeFirst();
 
             if (data.numDeletedRows == 0n) {
@@ -134,11 +138,11 @@ export default [
                 } satisfies ErrorApiResponse;
             }
 
-            sendNotificationToAll({
+            sendNotificationToFamily(ctx.family_id, {
                 title: 'Odstraněna událost',
                 body: `${formatUser(ctx)} odstranil událost ${event.name}`,
                 data: {
-                    url: '/app/calendar'
+                    url: `/${ctx.family_uuid}/calendar`
                 }
             });
 

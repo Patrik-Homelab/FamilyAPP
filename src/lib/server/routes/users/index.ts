@@ -1,3 +1,4 @@
+import type { ErrorList } from '$/lib/errors';
 import type { Permission } from '$/lib/permissions';
 import type { Response, ResponseWithData } from '$/types/types';
 import type { ErrorApiResponse } from '@patrick115/sveltekitapi';
@@ -11,11 +12,12 @@ export const USER_PERMISSION = 'admin.users' as Permission;
 export const userProcedure = permProcedure([USER_PERMISSION]);
 
 export default [
-    userProcedure.GET.query(async () => {
+    userProcedure.GET.query(async ({ ctx }) => {
         const users = await conn
             .selectFrom('user')
             .leftJoin('user_group', 'user.id', 'user_id')
             .selectAll()
+            .where('user.family_id', '=', ctx.family_id)
             .execute();
 
         return {
@@ -32,7 +34,39 @@ export default [
             id: z.number(),
             group: z.number().nullable()
         })
-    ).query(async ({ input }) => {
+    ).query(async ({ input, ctx }) => {
+        const targetUser = await conn
+            .selectFrom('user')
+            .select('id')
+            .where('id', '=', input.id)
+            .where('family_id', '=', ctx.family_id)
+            .executeTakeFirst();
+
+        if (!targetUser) {
+            return {
+                status: false,
+                code: 404,
+                message: 'users.notFound' satisfies ErrorList
+            } satisfies ErrorApiResponse;
+        }
+
+        if (input.group !== null) {
+            const targetGroup = await conn
+                .selectFrom('group')
+                .select('id')
+                .where('id', '=', input.group)
+                .where('family_id', '=', ctx.family_id)
+                .executeTakeFirst();
+
+            if (!targetGroup) {
+                return {
+                    status: false,
+                    code: 404,
+                    message: 'groups.notFound' satisfies ErrorList
+                } satisfies ErrorApiResponse;
+            }
+        }
+
         //check if already exists
         const result = await conn
             .selectFrom('user_group')

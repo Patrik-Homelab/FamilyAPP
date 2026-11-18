@@ -1,119 +1,156 @@
 import { toDate } from '$/lib/functions';
-import fs from 'node:fs/promises';
-import { join } from 'path';
-import { sendNotificationToMultiple, type Cron, asyncExists } from '../functions';
+import { decryptSecret } from '../crypto';
+import { sendNotificationToMultiple, type Cron } from '../functions';
 import { haWaterTemp } from '../homeAssistant/waterTemp';
 import { conn } from '../variables';
 
-const MIN_TEMP = 30;
-const MAX_TEMP = 75;
-const TEMP_LOCK_FILE = join(process.cwd(), '.temp-lock');
-
 enum IncidentType {
-    NONE,
-    LOW,
-    HIGH
+    NONE = 0,
+    LOW = 1,
+    HIGH = 2
 }
 
-const getIncidentType = (temp: number): IncidentType => {
-    if (temp < MIN_TEMP) return IncidentType.LOW;
-    if (temp > MAX_TEMP) return IncidentType.HIGH;
+const getIncidentType = (
+    temp: number,
+    minTemp: number,
+    maxTemp: number
+): IncidentType => {
+    if (temp < minTemp) return IncidentType.LOW;
+    if (temp > maxTemp) return IncidentType.HIGH;
     return IncidentType.NONE;
-};
-
-interface TempLockData {
-    state: IncidentType;
-    temp: number;
-    timestamp: number;
-}
-
-const readTempLock = async (): Promise<TempLockData | null> => {
-    if (!(await asyncExists(TEMP_LOCK_FILE))) {
-        return null;
-    }
-    try {
-        const data = await fs.readFile(TEMP_LOCK_FILE, 'utf8');
-        return JSON.parse(data);
-    } catch {
-        return null;
-    }
-};
-
-const writeTempLock = async (data: TempLockData): Promise<void> => {
-    await fs.writeFile(TEMP_LOCK_FILE, JSON.stringify(data));
-};
-
-const removeTempLock = async (): Promise<void> => {
-    if (await asyncExists(TEMP_LOCK_FILE)) {
-        await fs.unlink(TEMP_LOCK_FILE);
-    }
 };
 
 export default [
     '0 */30 * * * *',
     async () => {
-        const upper = await haWaterTemp.getCurrentUpperTemp();
-        if (!upper) {
-            console.error('No upper temperature data available from Home Assistant');
-            return;
-        }
+        const configs = await conn
+            .selectFrom('family_ha_config')
+            .innerJoin('family', 'family.id', 'family_ha_config.family_id')
+            .select([
+                'family_ha_config.family_id',
+                'family_ha_config.ha_url',
+                'family_ha_config.ha_token_encrypted',
+                'family_ha_config.alert_sensor_id',
+                'family_ha_config.alert_min_temp',
+                'family_ha_config.alert_max_temp',
+                'family_ha_config.last_incident_state',
+                'family.uuid as family_uuid'
+            ])
+            .where('family_ha_config.enabled', '=', 1)
+            .where('family_ha_config.alerts_enabled', '=', 1)
+            .execute();
 
-        const temp = upper.temp;
-        const currentIncident = getIncidentType(temp);
-        const lockData = await readTempLock();
+        for (const config of configs) {
+            const sensors = await conn
+                .selectFrom('family_ha_sensor')
+                .select(['id', 'entity_id', 'label'])
+                .where('family_id', '=', config.family_id)
+                .orderBy('sort_order', 'asc')
+                .orderBy('id', 'asc')
+                .execute();
 
-        // If temperature is normal
-        if (currentIncident === IncidentType.NONE) {
-            // If there's a lock file (previous state was abnormal), send normalization notification
-            if (lockData) {
+            if (sensors.length === 0) continue;
+
+            const alertSensor =
+                (config.alert_sensor_id
+                    ? sensors.find((s) => s.id === config.alert_sensor_id)
+                    : undefined) ?? sensors[0];
+
+            let haToken = '';
+            try {
+                haToken = decryptSecret(config.ha_token_encrypted);
+            } catch (err) {
+                console.error(
+                    `Failed to decrypt HA token for family ${config.family_id}:`,
+                    err
+                );
+                continue;
+            }
+
+            const current = await haWaterTemp.getCurrentTemp(
+                config.ha_url,
+                haToken,
+                alertSensor.entity_id
+            );
+            if (!current) {
+                console.error(
+                    `No temperature data available from Home Assistant for family ${config.family_id} (${alertSensor.entity_id})`
+                );
+                continue;
+            }
+
+            const minTemp = parseFloat(config.alert_min_temp);
+            const maxTemp = parseFloat(config.alert_max_temp);
+            const currentIncident = getIncidentType(current.temp, minTemp, maxTemp);
+            const previousIncident = config.last_incident_state as IncidentType;
+
+            if (currentIncident === IncidentType.NONE) {
+                if (previousIncident !== IncidentType.NONE) {
+                    const registered = await conn
+                        .selectFrom('enabled_temp_notifications')
+                        .innerJoin('user', 'user.id', 'enabled_temp_notifications.userId')
+                        .select('enabled_temp_notifications.userId')
+                        .where('user.family_id', '=', config.family_id)
+                        .execute();
+
+                    await sendNotificationToMultiple(
+                        registered.map((r) => r.userId),
+                        {
+                            title: 'Teplota vody se normalizovala',
+                            body: `${alertSensor.label} v ${toDate(current.timestamp)} je nyní ${current.temp} °C a vrátila se do normálního rozsahu.`,
+                            data: {
+                                url: `/${config.family_uuid}/water-temperature`
+                            }
+                        }
+                    );
+
+                    await conn
+                        .updateTable('family_ha_config')
+                        .set({
+                            last_incident_state: IncidentType.NONE,
+                            last_incident_temp: null,
+                            last_incident_at: null
+                        })
+                        .where('family_id', '=', config.family_id)
+                        .execute();
+                }
+                continue;
+            }
+
+            if (previousIncident !== currentIncident) {
                 const registered = await conn
                     .selectFrom('enabled_temp_notifications')
-                    .selectAll()
+                    .innerJoin('user', 'user.id', 'enabled_temp_notifications.userId')
+                    .select('enabled_temp_notifications.userId')
+                    .where('user.family_id', '=', config.family_id)
                     .execute();
-                const registeredUsers = registered.map((r) => r.userId);
 
-                await sendNotificationToMultiple(registeredUsers, {
-                    title: 'Teplota vody se normalizovala',
-                    body: `Teplota vody v ${toDate(upper.timestamp)} je nyní ${temp} °C a vrátila se do normálního rozsahu.`,
-                    data: {
-                        url: '/app/water-temperature'
+                const rangeText =
+                    currentIncident === IncidentType.LOW
+                        ? 'pod minimální hodnotu'
+                        : 'nad maximální hodnotu';
+
+                await sendNotificationToMultiple(
+                    registered.map((r) => r.userId),
+                    {
+                        title: 'Varování ohledně teploty vody',
+                        body: `${alertSensor.label} v ${toDate(current.timestamp)} dosáhla ${current.temp} °C, což je ${rangeText} povoleného rozsahu.`,
+                        data: {
+                            url: `/${config.family_uuid}/water-temperature`
+                        }
                     }
-                });
+                );
 
-                // Remove the lock file
-                await removeTempLock();
+                await conn
+                    .updateTable('family_ha_config')
+                    .set({
+                        last_incident_state: currentIncident,
+                        last_incident_temp: current.temp.toFixed(2),
+                        last_incident_at: current.timestamp
+                    })
+                    .where('family_id', '=', config.family_id)
+                    .execute();
             }
-            return;
-        }
-
-        // Temperature is abnormal (LOW or HIGH)
-        // Only send notification if this is a new incident or changed type
-        if (!lockData || lockData.state !== currentIncident) {
-            const registered = await conn
-                .selectFrom('enabled_temp_notifications')
-                .selectAll()
-                .execute();
-            const registeredUsers = registered.map((r) => r.userId);
-
-            const rangeText =
-                currentIncident === IncidentType.LOW
-                    ? 'pod minimální hodnotu'
-                    : 'nad maximální hodnotu';
-
-            await sendNotificationToMultiple(registeredUsers, {
-                title: 'Varování ohledně teploty vody',
-                body: `Teplota vody v ${toDate(upper.timestamp)} dosáhla ${temp} °C, což je ${rangeText} povoleného rozsahu.`,
-                data: {
-                    url: '/app/water-temperature'
-                }
-            });
-
-            // Create or update the lock file
-            await writeTempLock({
-                state: currentIncident,
-                temp: temp,
-                timestamp: upper.timestamp.getTime()
-            });
         }
     }
 ] satisfies Cron;

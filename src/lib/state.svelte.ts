@@ -1,4 +1,4 @@
-import type { UserState } from '$/types/types';
+import type { UserData, UserState } from '$/types/types';
 import { getContext, setContext } from 'svelte';
 
 type State = {
@@ -18,7 +18,6 @@ export const getState = () => {
     return getContext<State>('state');
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const logged = (state: UserState): state is { logged: true; data: any } => {
+export const logged = (state: UserState): state is { logged: true; data: UserData } => {
     return state.logged;
 };

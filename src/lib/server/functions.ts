@@ -1,6 +1,6 @@
 import type { WebPush } from '$/types/database';
 import type { UserData, UserState } from '$/types/types';
-import { FILE_FOLDER } from '$env/static/private';
+import { COOKIE_EXPIRE, FILE_FOLDER } from '$env/static/private';
 import type { Awaitable } from '@patrick115/sveltekitapi';
 import type { Cookies } from '@sveltejs/kit';
 import type { Selectable } from 'kysely';
@@ -12,6 +12,14 @@ import webPush from 'web-push';
 import { z } from 'zod';
 import { conn, jwt } from './variables';
 
+export const setSessionCookie = (cookies: Cookies, userData: UserData) => {
+    const cookie = jwt.setCookie(userData);
+    cookies.set('session', cookie, {
+        path: '/',
+        maxAge: parseInt(COOKIE_EXPIRE)
+    });
+};
+
 export const getCookieData = (cookies: Cookies): UserState => {
     const cookie = cookies.get('session');
     if (!cookie) {
@@ -22,7 +30,12 @@ export const getCookieData = (cookies: Cookies): UserState => {
 
     const data = jwt.getCookie<UserData>(cookie);
 
-    if (!data) {
+    if (
+        !data ||
+        typeof data.family_id !== 'number' ||
+        typeof data.family_uuid !== 'string' ||
+        data.family_uuid.length === 0
+    ) {
         return {
             logged: false
         };
@@ -62,6 +75,49 @@ export const getUserPermissions = async (id: number) => {
         group: group!,
         permissions: perms.map((p) => p.permission)
     };
+};
+
+export const getUserFamilyContext = async (userId: number) => {
+    const row = await conn
+        .selectFrom('user')
+        .innerJoin('family', 'family.id', 'user.family_id')
+        .leftJoin('family_ha_config', 'family_ha_config.family_id', 'family.id')
+        .select([
+            'user.id',
+            'user.username',
+            'user.firstname',
+            'user.lastname',
+            'user.family_id',
+            'user.bank_account_prefix',
+            'user.bank_account_number',
+            'user.bank_code',
+            'family.uuid as family_uuid',
+            'family.name as family_name',
+            'family_ha_config.enabled as ha_enabled'
+        ])
+        .where('user.id', '=', userId)
+        .executeTakeFirst();
+
+    if (!row) return null;
+
+    const perms = await getUserPermissions(userId);
+
+    const userData: UserData = {
+        id: row.id,
+        username: row.username,
+        firstname: row.firstname,
+        lastname: row.lastname,
+        family_id: row.family_id,
+        bank_account_prefix: row.bank_account_prefix,
+        bank_account_number: row.bank_account_number,
+        bank_code: row.bank_code,
+        family_uuid: row.family_uuid,
+        family_name: row.family_name,
+        ha_enabled: row.ha_enabled === 1,
+        ...perms
+    };
+
+    return userData;
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -165,6 +221,8 @@ export const sendNotificationToMultiple = async (
     userIds: number[],
     notification: NotificationPayload
 ) => {
+    if (userIds.length === 0) return;
+
     const pushes = await conn
         .selectFrom('web_push')
         .selectAll()
@@ -174,8 +232,16 @@ export const sendNotificationToMultiple = async (
     await batchNotifications(notification, pushes);
 };
 
-export const sendNotificationToAll = async (notification: NotificationPayload) => {
-    const pushes = await conn.selectFrom('web_push').selectAll().execute();
+export const sendNotificationToFamily = async (
+    familyId: number,
+    notification: NotificationPayload
+) => {
+    const pushes = await conn
+        .selectFrom('web_push')
+        .innerJoin('user', 'user.id', 'web_push.userId')
+        .selectAll('web_push')
+        .where('user.family_id', '=', familyId)
+        .execute();
 
     await batchNotifications(notification, pushes);
 };

@@ -10,12 +10,13 @@ import type { DePromise, Response, ResponseWithData } from '$/types/types';
 import { sendNotification, uploadFile } from '../../functions';
 import { formatUser, toDate } from '$/lib/functions';
 
-export const getDebtsByUserId = async (userId: number, who: number) => {
+export const getDebtsByUserId = async (userId: number, who: number, familyId: number) => {
     return await conn
         .selectFrom('debt')
         .selectAll()
         .where((eb) =>
             eb.and([
+                eb('debt.family_id', '=', familyId),
                 eb('debt.whom', '=', userId),
                 eb('debt.who', '=', who),
                 eb('resolved_on', 'is', null)
@@ -55,6 +56,21 @@ export default [
             } satisfies ErrorApiResponse;
         }
 
+        const targetUser = await conn
+            .selectFrom('user')
+            .select('id')
+            .where('id', '=', data.data.who)
+            .where('family_id', '=', ctx.family_id)
+            .executeTakeFirst();
+
+        if (!targetUser) {
+            return {
+                status: false,
+                code: 401,
+                message: 'debt.input' satisfies ErrorList
+            } satisfies ErrorApiResponse;
+        }
+
         let fileName: string | undefined = undefined;
         //handle file
         if (input.has('image')) {
@@ -82,6 +98,7 @@ export default [
             await conn
                 .insertInto('debt')
                 .values({
+                    family_id: ctx.family_id,
                     who: data.data.who,
                     whom: ctx.id,
                     price: data.data.amount,
@@ -94,7 +111,7 @@ export default [
                 title: 'Máš nový dluh',
                 body: `${formatUser(ctx)} chce po tobě ${data.data.amount} Kč`,
                 data: {
-                    url: '/app/debt/view/' + ctx.id
+                    url: `/${ctx.family_uuid}/debt/view/${ctx.id}`
                 }
             });
 
@@ -122,8 +139,15 @@ export default [
     }),
     loggedProcedure.DELETE.input(z.number()).query(async ({ ctx, input }) => {
         try {
-            conn.deleteFrom('debt')
-                .where((eb) => eb.and([eb('id', '=', input), eb('whom', '=', ctx.id)]))
+            await conn
+                .deleteFrom('debt')
+                .where((eb) =>
+                    eb.and([
+                        eb('id', '=', input),
+                        eb('whom', '=', ctx.id),
+                        eb('family_id', '=', ctx.family_id)
+                    ])
+                )
                 .execute();
             return {
                 status: true
@@ -169,7 +193,13 @@ export default [
         const debt = await conn
             .selectFrom('debt')
             .select('photo')
-            .where((eb) => eb.and([eb('id', '=', data.data.id), eb('whom', '=', ctx.id)]))
+            .where((eb) =>
+                eb.and([
+                    eb('id', '=', data.data.id),
+                    eb('whom', '=', ctx.id),
+                    eb('family_id', '=', ctx.family_id)
+                ])
+            )
             .executeTakeFirst();
         if (!debt) {
             return {
@@ -177,6 +207,23 @@ export default [
                 code: 401,
                 message: 'debt.input' satisfies ErrorList
             } satisfies ErrorApiResponse;
+        }
+
+        if (data.data.who !== undefined) {
+            const targetUser = await conn
+                .selectFrom('user')
+                .select('id')
+                .where('id', '=', data.data.who)
+                .where('family_id', '=', ctx.family_id)
+                .executeTakeFirst();
+
+            if (!targetUser) {
+                return {
+                    status: false,
+                    code: 401,
+                    message: 'debt.input' satisfies ErrorList
+                } satisfies ErrorApiResponse;
+            }
         }
 
         let fileName: string | null | undefined = undefined;
@@ -217,6 +264,7 @@ export default [
                     photo: fileName
                 })
                 .where('id', '=', data.data.id)
+                .where('family_id', '=', ctx.family_id)
                 .execute();
 
             return {
@@ -238,6 +286,15 @@ export default [
         })
     ).query(async ({ input, ctx }) => {
         try {
+            if (input.ids.length === 0) {
+                return {
+                    status: true,
+                    data: await getDebtsByUserId(input.whom, ctx.id, ctx.family_id)
+                } satisfies ResponseWithData<
+                    DePromise<ReturnType<typeof getDebtsByUserId>>
+                >;
+            }
+
             await conn
                 .updateTable('debt')
                 .set({
@@ -245,6 +302,7 @@ export default [
                 })
                 .where((eb) =>
                     eb.and([
+                        eb('family_id', '=', ctx.family_id),
                         eb('whom', '=', input.whom),
                         eb('who', '=', ctx.id),
                         eb('id', 'in', input.ids)
@@ -255,6 +313,7 @@ export default [
             const list = await conn
                 .selectFrom('debt')
                 .selectAll()
+                .where('family_id', '=', ctx.family_id)
                 .where('id', 'in', input.ids)
                 .orderBy('when', 'desc')
                 .execute();
@@ -269,13 +328,13 @@ export default [
                 title: 'Byl ti splacen dluh',
                 body: baseBody,
                 data: {
-                    url: '/app/debt'
+                    url: `/${ctx.family_uuid}/debt`
                 }
             });
 
             return {
                 status: true,
-                data: await getDebtsByUserId(input.whom, ctx.id)
+                data: await getDebtsByUserId(input.whom, ctx.id, ctx.family_id)
             } satisfies ResponseWithData<DePromise<ReturnType<typeof getDebtsByUserId>>>;
         } catch (err) {
             console.error(err);

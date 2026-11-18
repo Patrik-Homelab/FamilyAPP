@@ -15,7 +15,20 @@
     import Title from '../headers/Title.svelte';
     import Icon from '../Icon.svelte';
 
-    const BASE = '/app' as const;
+    const {
+        familyUuid,
+        familyName,
+        haEnabled,
+        isFamilyOwner = false
+    }: {
+        familyUuid: string;
+        familyName: string;
+        haEnabled: boolean;
+        isFamilyOwner?: boolean;
+    } = $props();
+
+    const BASE = $derived(`/${familyUuid}`);
+
     const routes: {
         name: string;
         path: string;
@@ -23,6 +36,8 @@
         startsWith?: boolean;
         hidden?: boolean;
         permissions?: Permission[];
+        ownerAllowed?: boolean;
+        requiresHa?: boolean;
     }[] = [
         {
             name: 'Domů',
@@ -51,11 +66,6 @@
             path: '/calendar',
             icon: 'bi-calendar3'
         },
-        /*{
-            name: 'Poznámkovník',
-            path: '/notes',
-            icon: 'bi-stickies-fill'
-        },*/
         {
             name: 'Nákupní seznam',
             path: '/shoppinglist',
@@ -65,7 +75,16 @@
         {
             name: 'Teplota vody',
             path: '/water-temperature',
-            icon: 'bi-thermometer-half'
+            icon: 'bi-thermometer-half',
+            requiresHa: true
+        },
+        {
+            name: 'Nastavení rodiny',
+            path: '/family-settings',
+            startsWith: true,
+            icon: 'bi-house-gear-fill',
+            permissions: ['admin.family'],
+            ownerAllowed: true
         },
         {
             name: 'Správa skupin',
@@ -92,12 +111,6 @@
             name: 'Nastavení',
             path: '/settings',
             icon: 'bi-gear-fill'
-        },
-        {
-            name: 'Seznam změn',
-            path: '/changelog',
-            icon: 'bi-list',
-            hidden: true
         }
     ];
 
@@ -192,7 +205,7 @@
 </script>
 
 <svelte:head>
-    <title>{route?.name ?? ''} | FamilyAPP</title>
+    <title>{route?.name ?? ''} | {familyName} | FamilyAPP</title>
 </svelte:head>
 
 <div class="flex items-center gap-2 p-2 md:hidden">
@@ -229,7 +242,7 @@
         <Icon onclick={logout} name="bi-box-arrow-in-right" class="text-3xl font-bold" />
     </div>
     <div class="flex flex-col items-center justify-center gap-2">
-        <Title>Uživatelské menu:</Title>
+        <Title>{familyName}</Title>
         {#if logged(_state.userState)}
             {@const data = _state.userState.data}
             <h1 class="font-poppins font-bold">
@@ -253,11 +266,12 @@
     <hr class="my-4" />
     <div class="flex flex-1 flex-col items-center justify-center gap-2">
         <div class="flex h-full w-max flex-1 flex-col gap-2 overflow-y-auto">
-            {#each routes.filter((route) => {
-                const perms = route.permissions ? route.permissions.some( (perm) => permissions.hasPermission(perm) ) : true;
-                const hidden = route.hidden !== undefined ? !route.hidden : true;
+            {#each routes.filter((r) => {
+                const perms = r.permissions ? r.permissions.some( (perm) => permissions.hasPermission(perm) ) || (r.ownerAllowed && isFamilyOwner) : true;
+                const hidden = r.hidden !== undefined ? !r.hidden : true;
+                const haOk = r.requiresHa ? haEnabled : true;
 
-                return perms && hidden;
+                return perms && hidden && haOk;
             }) as _route, i (i)}
                 {@const badgeCount = _route.path
                     ? badgeStore.counts[_route.path] || 0
@@ -265,7 +279,7 @@
                 <a
                     class:border-b-2={_route.name == route?.name}
                     class:hover:after:scale-x-100={_route.name != route?.name}
-                    href="/app{_route.path}"
+                    href="{BASE}{_route.path}"
                     onclick={() => {
                         opened = false;
                         if (_route.path) badgeStore.clear(_route.path);

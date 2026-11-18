@@ -14,15 +14,19 @@ const CATEGORIES = [
     '/debt',
     '/calendar',
     '/shoppinglist',
+    '/water-temperature',
+    '/family-settings',
     '/groups',
     '/users',
     '/notifications',
     '/settings'
 ];
 
+const UUID_PREFIX = /^\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+
 export function extractCategoryFromUrl(url: string | null | undefined): string {
     if (!url) return '';
-    const clean = url.replace(/^\/app/, '');
+    const clean = url.replace(UUID_PREFIX, '').replace(/^\/app/, '');
     for (const cat of CATEGORIES) {
         if (clean === cat || clean.startsWith(cat + '/') || clean.startsWith(cat + '?')) {
             return cat;

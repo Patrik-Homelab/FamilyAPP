@@ -1,11 +1,12 @@
+import { PresentState } from '$/types/types';
 import { sendNotification, type Cron } from '../functions';
 import { conn } from '../variables';
-import { PresentState } from '$/types/types';
 
 /**
  * Daily presents summary cron job
  * Runs every day at 20:00 (8 PM)
- * Sends a notification to each user with a summary of presents changes from the past day:
+ * Sends a notification to each user with a summary of presents changes from the past day
+ * within their own family:
  * - New presents added by other users (potential gift ideas)
  * - Presents edited by other users
  */
@@ -15,8 +16,17 @@ export default [
         const now = new Date();
         const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
-        // Get all users
-        const users = await conn.selectFrom('user').select(['id', 'firstname']).execute();
+        // Get all users with their family UUID
+        const users = await conn
+            .selectFrom('user')
+            .innerJoin('family', 'family.id', 'user.family_id')
+            .select([
+                'user.id',
+                'user.firstname',
+                'user.family_id',
+                'family.uuid as family_uuid'
+            ])
+            .execute();
 
         // Get all new presents added in the past day (excluding already given ones)
         const allNewPresents = await conn
@@ -26,6 +36,7 @@ export default [
                 'present.id',
                 'present.name',
                 'present.user_id',
+                'present.family_id',
                 'user.firstname as owner_firstname'
             ])
             .where('present.created_at', '>=', oneDayAgo)
@@ -40,6 +51,7 @@ export default [
                 'present.id',
                 'present.name',
                 'present.user_id',
+                'present.family_id',
                 'present.created_at',
                 'user.firstname as owner_firstname'
             ])
@@ -49,12 +61,17 @@ export default [
             .execute();
 
         for (const user of users) {
-            // Filter new presents for this user (presents by others)
-            const newPresents = allNewPresents.filter((p) => p.user_id !== user.id);
+            // Filter new presents for this user within the same family
+            const newPresents = allNewPresents.filter(
+                (p) => p.family_id === user.family_id && p.user_id !== user.id
+            );
 
-            // Filter edited presents for this user (presents by others, excluding newly created ones)
+            // Filter edited presents for this user within the same family
             const editedPresents = allEditedPresents.filter(
-                (p) => p.user_id !== user.id && p.created_at < oneDayAgo
+                (p) =>
+                    p.family_id === user.family_id &&
+                    p.user_id !== user.id &&
+                    p.created_at < oneDayAgo
             );
 
             // Skip if no changes
@@ -87,7 +104,7 @@ export default [
                 title: 'Denní přehled přání',
                 body: messageParts.join('. '),
                 data: {
-                    url: '/app/presents/others'
+                    url: `/${user.family_uuid}/presents/others`
                 }
             });
         }

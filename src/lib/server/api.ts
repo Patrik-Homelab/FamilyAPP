@@ -2,6 +2,7 @@ import { APICreate, MiddleWareError } from '@patrick115/sveltekitapi';
 import type { Context } from './context';
 import { Permissions, type Permission } from '../permissions';
 import { env } from '$env/dynamic/private';
+import { conn } from './variables';
 
 export const api = new APICreate<Context>();
 
@@ -32,6 +33,31 @@ export const permProcedure = (permissions: Permission[]) => {
         }
 
         return next();
+    });
+};
+
+export const familyOwnerOrPermProcedure = (permissions: Permission[]) => {
+    return loggedProcedure.use(async ({ ctx, next }) => {
+        const perms = new Permissions(ctx);
+        if (permissions.some((p) => perms.hasPermission(p))) {
+            return next();
+        }
+
+        const family = await conn
+            .selectFrom('family')
+            .select('owner_user_id')
+            .where('id', '=', ctx.family_id)
+            .executeTakeFirst();
+
+        if (family?.owner_user_id === ctx.id) {
+            return next();
+        }
+
+        throw new MiddleWareError({
+            status: false,
+            code: 401,
+            message: "You don't have permission to do that"
+        });
     });
 };
 

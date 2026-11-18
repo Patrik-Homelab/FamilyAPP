@@ -19,6 +19,7 @@ export default loggedProcedure.POST.input(
         .selectFrom('present')
         .selectAll()
         .where('id', '=', input.id)
+        .where('family_id', '=', ctx.family_id)
         .executeTakeFirst();
 
     if (!present) {
@@ -48,6 +49,7 @@ export default loggedProcedure.POST.input(
         const result = await conn
             .insertInto('present')
             .values({
+                family_id: ctx.family_id,
                 user_id: ctx.id,
                 name: present.name,
                 description: present.description,
