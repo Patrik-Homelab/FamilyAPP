@@ -90,50 +90,55 @@
     } satisfies Snapshot<Omit<DataType, 'image'>>;
 </script>
 
-<Icon
-    onclick={() => goto(`/${page.params.family}/presents/mine`)}
-    name="bi-arrow-return-left"
-    class="text-2xl lg:text-3xl"
-/>
-
-<section
-    class="md:border-accent md:bg-secondary flex flex-1 flex-col items-center justify-center gap-4 p-4 md:m-auto md:flex-0 md:rounded-md md:border-2 md:p-8"
->
-    <Title>Nový dárek</Title>
-    <Entry id="name" label="Název" error={data.name.error}>
-        <Input id="name" bind:value={data.name.value} invalid={data.name.error} />
-    </Entry>
-    <Entry
-        id="description"
-        label="Popis"
-        note="(nepovinné)"
-        error={data.description.error}
+<div class="mx-auto flex w-full max-w-lg flex-1 flex-col gap-4 py-4">
+    <button
+        type="button"
+        onclick={() => goto(`/${page.params.family}/presents/mine`)}
+        class="text-text/75 hover:text-text bg-secondary/70 inline-flex w-max cursor-pointer items-center gap-2 rounded-xl border border-white/10 px-3 py-1.5 text-sm font-semibold transition-colors"
     >
-        <Input
-            id="description"
-            bind:value={data.description.value}
-            invalid={data.description.error}
-        />
-    </Entry>
-    <Entry id="link" label="Odkaz" note="(nepovinné)" error={data.link.error}>
-        <Input id="link" bind:value={data.link.value} invalid={data.link.error} />
-    </Entry>
-    <Entry id="price" label="Cena" error={data.price.error}>
-        <Input
-            id="price"
-            type="number"
-            step={0.00001}
-            bind:value={data.price.value}
-            invalid={data.price.error}
-        />
-    </Entry>
-    <Entry id="image" label="Obrázek" note="(nepovinné)" error={data.image.error}>
-        <FileSelect
-            id="image"
-            bind:value={data.image.value}
-            accept="image/png, image/jpg, image/jpeg"
-        />
-    </Entry>
+        <Icon name="bi-arrow-return-left" />
+        <span>Zpět na moje dárky</span>
+    </button>
 
-    <Button onclick={handle}>Přidat</Button>
-</section>
+    <section
+        class="bg-secondary/90 flex flex-col gap-4 rounded-2xl border border-white/10 p-6 shadow-xl"
+    >
+        <Title class="text-xl lg:text-2xl">Nový dárek</Title>
+        <Entry id="name" label="Název" error={data.name.error}>
+            <Input id="name" bind:value={data.name.value} invalid={data.name.error} />
+        </Entry>
+        <Entry
+            id="description"
+            label="Popis"
+            note="(nepovinné)"
+            error={data.description.error}
+        >
+            <Input
+                id="description"
+                bind:value={data.description.value}
+                invalid={data.description.error}
+            />
+        </Entry>
+        <Entry id="link" label="Odkaz" note="(nepovinné)" error={data.link.error}>
+            <Input id="link" bind:value={data.link.value} invalid={data.link.error} />
+        </Entry>
+        <Entry id="price" label="Cena" error={data.price.error}>
+            <Input
+                id="price"
+                type="number"
+                step={0.00001}
+                bind:value={data.price.value}
+                invalid={data.price.error}
+            />
+        </Entry>
+        <Entry id="image" label="Obrázek" note="(nepovinné)" error={data.image.error}>
+            <FileSelect
+                id="image"
+                bind:value={data.image.value}
+                accept="image/png, image/jpg, image/jpeg"
+            />
+        </Entry>
+
+        <Button onclick={handle}>Přidat dárek</Button>
+    </section>
+</div>

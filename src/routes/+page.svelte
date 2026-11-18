@@ -1,6 +1,7 @@
 <script lang="ts">
     import { Button, Entry, Input } from '$/components/form';
     import Title from '$/components/headers/Title.svelte';
+    import Icon from '$/components/Icon.svelte';
     import Footer from '$/components/navigation/Footer.svelte';
     import { API } from '$/lib/api';
     import { extractError, matchError } from '$/lib/errors';
@@ -181,140 +182,209 @@
     <title>FamilyAPP</title>
 </svelte:head>
 
-<section
-    class="md:border-accent md:bg-secondary flex w-full max-w-lg flex-1 flex-col items-center justify-center gap-4 p-4 md:m-auto md:flex-0 md:rounded-md md:border-2 md:p-8"
->
-    <div class="border-primary flex w-full justify-center gap-2 border-b pb-3">
-        <button
-            type="button"
-            onclick={() => (activeTab = 'login')}
-            class={[
-                'cursor-pointer rounded-md px-3 py-1.5 font-bold transition-colors',
-                activeTab === 'login'
-                    ? 'bg-accent text-white'
-                    : 'hover:bg-primary/30 text-text'
-            ]}
+<div class="flex flex-1 flex-col items-center justify-center p-4">
+    <div class="mb-6 flex flex-col items-center gap-2 text-center">
+        <div
+            class="bg-accent/15 text-accent border-accent/30 flex h-14 w-14 items-center justify-center rounded-2xl border text-3xl shadow-lg"
         >
-            Přihlášení
-        </button>
-        <button
-            type="button"
-            onclick={() => (activeTab = 'create')}
-            class={[
-                'cursor-pointer rounded-md px-3 py-1.5 font-bold transition-colors',
-                activeTab === 'create'
-                    ? 'bg-accent text-white'
-                    : 'hover:bg-primary/30 text-text'
-            ]}
-        >
-            Vytvořit rodinu
-        </button>
-        <button
-            type="button"
-            onclick={() => (activeTab = 'join')}
-            class={[
-                'cursor-pointer rounded-md px-3 py-1.5 font-bold transition-colors',
-                activeTab === 'join'
-                    ? 'bg-accent text-white'
-                    : 'hover:bg-primary/30 text-text'
-            ]}
-        >
-            Připojit se
-        </button>
+            <Icon name="bi-house-heart-fill" />
+        </div>
+        <h1 class="font-poppins text-3xl font-bold tracking-tight">FamilyAPP</h1>
+        <p class="text-text/60 text-sm">Sdílený prostor pro vaši rodinu</p>
     </div>
 
-    {#if activeTab === 'login'}
-        <Title class="text-center text-3xl lg:text-4xl">Přihlášení</Title>
-        <Entry id="username" label="Uživatelské jméno" error={loginData.username.error}>
-            <Input
-                id="username"
-                bind:value={loginData.username.value}
-                invalid={loginData.username.error}
-            />
-        </Entry>
-        <Entry id="password" label="Heslo" error={loginData.password.error}>
-            <Input
-                id="password"
-                type="password"
-                bind:value={loginData.password.value}
-                invalid={loginData.password.error}
-            />
-        </Entry>
-        <Button onclick={login} class="w-1/2 md:hover:bg-red-500">Přihlásit se</Button>
-    {:else if activeTab === 'create'}
-        <Title class="text-center text-3xl lg:text-4xl">Vytvořit rodinu</Title>
-        <Entry id="familyName" label="Název rodiny" error={createData.familyName.error}>
-            <Input
-                id="familyName"
-                placeholder="např. Novákovi"
-                bind:value={createData.familyName.value}
-                invalid={createData.familyName.error}
-            />
-        </Entry>
-        <Entry
-            id="create-username"
-            label="Uživatelské jméno (admin)"
-            error={createData.username.error}
+    <section
+        class="bg-secondary/90 flex w-full max-w-lg flex-col gap-5 rounded-2xl border border-white/10 p-6 shadow-2xl backdrop-blur-xl sm:p-8"
+    >
+        <!-- Segmented Tabs -->
+        <div
+            class="bg-background/70 grid grid-cols-3 gap-1 rounded-xl border border-white/10 p-1"
         >
-            <Input
-                id="create-username"
-                bind:value={createData.username.value}
-                invalid={createData.username.error}
-            />
-        </Entry>
-        <Entry id="create-firstname" label="Jméno" error={createData.firstname.error}>
-            <Input
-                id="create-firstname"
-                bind:value={createData.firstname.value}
-                invalid={createData.firstname.error}
-            />
-        </Entry>
-        <Entry id="create-lastname" label="Příjmení" error={createData.lastname.error}>
-            <Input
-                id="create-lastname"
-                bind:value={createData.lastname.value}
-                invalid={createData.lastname.error}
-            />
-        </Entry>
-        <Entry id="create-password" label="Heslo" error={createData.password.error}>
-            <Input
-                id="create-password"
-                type="password"
-                bind:value={createData.password.value}
-                invalid={createData.password.error}
-            />
-        </Entry>
-        <Entry
-            id="create-password2"
-            label="Heslo (znovu)"
-            error={createData.password2.error}
-        >
-            <Input
-                id="create-password2"
-                type="password"
-                bind:value={createData.password2.value}
-                invalid={createData.password2.error}
-            />
-        </Entry>
-        <Button onclick={createFamily} class="w-2/3 md:hover:bg-red-500">
-            Vytvořit rodinu a účet
-        </Button>
-    {:else}
-        <Title class="text-center text-3xl lg:text-4xl">Připojit se k rodině</Title>
-        <p class="text-center text-sm opacity-75">
-            Zadej kód rodiny nebo kód pozvánky, který jsi dostal od správce rodiny.
-        </p>
-        <Entry id="joinCode" label="Kód rodiny / pozvánky" error={joinError}>
-            <Input
-                id="joinCode"
-                placeholder="např. A1B2C3D4"
-                bind:value={joinCode}
-                invalid={joinError}
-            />
-        </Entry>
-        <Button onclick={lookupJoinCode} class="w-1/2 md:hover:bg-red-500">
-            Pokračovat
-        </Button>
-    {/if}
-</section>
+            <button
+                type="button"
+                onclick={() => (activeTab = 'login')}
+                class={[
+                    'cursor-pointer rounded-lg px-2 py-2 text-xs font-semibold transition-all sm:text-sm',
+                    activeTab === 'login'
+                        ? 'bg-accent text-white shadow-xs'
+                        : 'text-text/70 hover:text-text hover:bg-white/5'
+                ]}
+            >
+                Přihlášení
+            </button>
+            <button
+                type="button"
+                onclick={() => (activeTab = 'create')}
+                class={[
+                    'cursor-pointer rounded-lg px-2 py-2 text-xs font-semibold transition-all sm:text-sm',
+                    activeTab === 'create'
+                        ? 'bg-accent text-white shadow-xs'
+                        : 'text-text/70 hover:text-text hover:bg-white/5'
+                ]}
+            >
+                Nová rodina
+            </button>
+            <button
+                type="button"
+                onclick={() => (activeTab = 'join')}
+                class={[
+                    'cursor-pointer rounded-lg px-2 py-2 text-xs font-semibold transition-all sm:text-sm',
+                    activeTab === 'join'
+                        ? 'bg-accent text-white shadow-xs'
+                        : 'text-text/70 hover:text-text hover:bg-white/5'
+                ]}
+            >
+                Připojit se
+            </button>
+        </div>
+
+        {#if activeTab === 'login'}
+            <form
+                onsubmit={(e) => {
+                    e.preventDefault();
+                    login();
+                }}
+                class="flex flex-col gap-4"
+            >
+                <Title class="text-center text-xl lg:text-2xl">Přihlášení k účtu</Title>
+                <Entry
+                    id="username"
+                    label="Uživatelské jméno"
+                    error={loginData.username.error}
+                >
+                    <Input
+                        id="username"
+                        autocomplete="username"
+                        bind:value={loginData.username.value}
+                        invalid={loginData.username.error}
+                    />
+                </Entry>
+                <Entry id="password" label="Heslo" error={loginData.password.error}>
+                    <Input
+                        id="password"
+                        type="password"
+                        autocomplete="current-password"
+                        bind:value={loginData.password.value}
+                        invalid={loginData.password.error}
+                    />
+                </Entry>
+                <Button type="submit" class="mt-1">Přihlásit se</Button>
+            </form>
+        {:else if activeTab === 'create'}
+            <form
+                onsubmit={(e) => {
+                    e.preventDefault();
+                    createFamily();
+                }}
+                class="flex flex-col gap-3.5"
+            >
+                <Title class="text-center text-xl lg:text-2xl"
+                    >Vytvořit novou rodinu</Title
+                >
+                <Entry
+                    id="familyName"
+                    label="Název rodiny"
+                    error={createData.familyName.error}
+                >
+                    <Input
+                        id="familyName"
+                        placeholder="např. Novákovi"
+                        bind:value={createData.familyName.value}
+                        invalid={createData.familyName.error}
+                    />
+                </Entry>
+                <Entry
+                    id="create-username"
+                    label="Uživatelské jméno (admin)"
+                    error={createData.username.error}
+                >
+                    <Input
+                        id="create-username"
+                        autocomplete="username"
+                        bind:value={createData.username.value}
+                        invalid={createData.username.error}
+                    />
+                </Entry>
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <Entry
+                        id="create-firstname"
+                        label="Jméno"
+                        error={createData.firstname.error}
+                    >
+                        <Input
+                            id="create-firstname"
+                            autocomplete="given-name"
+                            bind:value={createData.firstname.value}
+                            invalid={createData.firstname.error}
+                        />
+                    </Entry>
+                    <Entry
+                        id="create-lastname"
+                        label="Příjmení"
+                        error={createData.lastname.error}
+                    >
+                        <Input
+                            id="create-lastname"
+                            autocomplete="family-name"
+                            bind:value={createData.lastname.value}
+                            invalid={createData.lastname.error}
+                        />
+                    </Entry>
+                </div>
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <Entry
+                        id="create-password"
+                        label="Heslo"
+                        error={createData.password.error}
+                    >
+                        <Input
+                            id="create-password"
+                            type="password"
+                            autocomplete="new-password"
+                            bind:value={createData.password.value}
+                            invalid={createData.password.error}
+                        />
+                    </Entry>
+                    <Entry
+                        id="create-password2"
+                        label="Heslo znovu"
+                        error={createData.password2.error}
+                    >
+                        <Input
+                            id="create-password2"
+                            type="password"
+                            autocomplete="new-password"
+                            bind:value={createData.password2.value}
+                            invalid={createData.password2.error}
+                        />
+                    </Entry>
+                </div>
+                <Button type="submit" class="mt-1">Vytvořit rodinu a účet</Button>
+            </form>
+        {:else}
+            <form
+                onsubmit={(e) => {
+                    e.preventDefault();
+                    lookupJoinCode();
+                }}
+                class="flex flex-col gap-4"
+            >
+                <Title class="text-center text-xl lg:text-2xl">Připojit se k rodině</Title
+                >
+                <p class="text-text/70 text-center text-sm">
+                    Zadej kód rodiny nebo kód pozvánky, který jsi obdržel od správce.
+                </p>
+                <Entry id="joinCode" label="Kód rodiny / pozvánky" error={joinError}>
+                    <Input
+                        id="joinCode"
+                        placeholder="např. A1B2C3D4"
+                        bind:value={joinCode}
+                        invalid={joinError}
+                    />
+                </Entry>
+                <Button type="submit">Pokračovat</Button>
+            </form>
+        {/if}
+    </section>
+</div>
 <Footer version={pageData.version} />

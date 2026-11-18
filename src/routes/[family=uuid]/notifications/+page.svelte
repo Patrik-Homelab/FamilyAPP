@@ -1,5 +1,6 @@
 <script lang="ts">
-    import { Button, Input, Select, TextArea } from '$/components/form';
+    import { Button, Entry, Input, Select, TextArea } from '$/components/form';
+    import Title from '$/components/headers/Title.svelte';
     import { API } from '$/lib/api';
     import { SwalAlert } from '$/lib/functions';
     import type { User } from '$/types/database';
@@ -97,48 +98,47 @@
     };
 </script>
 
-<div class="mt-2 h-full w-full flex-1">
-    <div class="flex flex-col gap-4 p-4">
-        <h1 class="font-poppins text-2xl font-bold">Tester notifikací</h1>
+<section class="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-5 pb-6">
+    <Title>Tester notifikací</Title>
 
-        <div class="flex flex-col gap-2">
-            <label for="user-select" class="font-poppins text-xl font-bold">
-                Vyberte uživatele:
-            </label>
+    <div
+        class="bg-secondary/85 flex flex-col gap-4 rounded-2xl border border-white/10 p-5 shadow-md sm:p-6"
+    >
+        <Entry id="user-select" label="Vyberte uživatele">
             <Select id="user-select" bind:value={selectedUserId}>
                 <option value="">-- Vyberte uživatele --</option>
                 {#each users as user (user.id)}
                     <option value={user.id.toString()}>{user.username}</option>
                 {/each}
             </Select>
-        </div>
+        </Entry>
 
-        <div class="flex flex-col gap-2">
-            <label for="title-input" class="font-poppins text-xl font-bold">
-                Nadpis notifikace:
-            </label>
+        <Entry id="title-input" label="Nadpis notifikace">
             <Input
                 id="title-input"
                 type="text"
                 placeholder="Zadejte nadpis..."
                 bind:value={title}
             />
-        </div>
+        </Entry>
 
-        <div class="flex flex-col gap-2">
-            <label for="body-input" class="font-poppins text-xl font-bold">
-                Zpráva notifikace:
-            </label>
+        <Entry id="body-input" label="Zpráva notifikace">
             <TextArea
                 id="body-input"
                 placeholder="Zadejte zprávu..."
-                rows={5}
+                rows={4}
                 bind:value={body}
             />
-        </div>
+        </Entry>
 
-        <Button onclick={sendNotification} disabled={sending}>
-            {sending ? 'Odesílání...' : 'Odeslat notifikaci'}
-        </Button>
+        <div>
+            <Button
+                onclick={sendNotification}
+                disabled={sending}
+                class="w-full md:w-auto"
+            >
+                {sending ? 'Odesílání...' : 'Odeslat notifikaci'}
+            </Button>
+        </div>
     </div>
-</div>
+</section>

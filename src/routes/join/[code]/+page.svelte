@@ -1,6 +1,7 @@
 <script lang="ts">
     import { Button, Entry, Input } from '$/components/form';
     import Title from '$/components/headers/Title.svelte';
+    import Icon from '$/components/Icon.svelte';
     import Footer from '$/components/navigation/Footer.svelte';
     import { API } from '$/lib/api';
     import { extractError, matchError } from '$/lib/errors';
@@ -88,53 +89,80 @@
     <title>Připojit se | FamilyAPP</title>
 </svelte:head>
 
-<section
-    class="md:border-accent md:bg-secondary flex w-full max-w-lg flex-1 flex-col items-center justify-center gap-4 p-4 md:m-auto md:flex-0 md:rounded-md md:border-2 md:p-8"
->
-    <Title class="text-center text-3xl lg:text-4xl">Připojení k rodině</Title>
-    <h3 class="text-center">
-        Rodina: <strong>{pageData.familyName}</strong> (kód:
-        <strong>{pageData.code}</strong>)
-    </h3>
-    <Entry id="username" label="Uživatelské jméno" error={data.username.error}>
-        <Input
-            id="username"
-            bind:value={data.username.value}
-            invalid={data.username.error}
-        />
-    </Entry>
-    <Entry id="firstname" label="Jméno" error={data.firstname.error}>
-        <Input
-            id="firstname"
-            bind:value={data.firstname.value}
-            invalid={data.firstname.error}
-        />
-    </Entry>
-    <Entry id="lastname" label="Příjmení" error={data.lastname.error}>
-        <Input
-            id="lastname"
-            bind:value={data.lastname.value}
-            invalid={data.lastname.error}
-        />
-    </Entry>
-    <Entry id="password" label="Heslo" error={data.password.error}>
-        <Input
-            id="password"
-            type="password"
-            bind:value={data.password.value}
-            invalid={data.password.error}
-        />
-    </Entry>
-    <Entry id="password2" label="Heslo (znovu)" error={data.password2.error}>
-        <Input
-            id="password2"
-            type="password"
-            bind:value={data.password2.value}
-            invalid={data.password2.error}
-        />
-    </Entry>
-    <Button onclick={register} class="w-1/2 md:hover:bg-red-500">
-        Vytvořit účet a vstoupit
-    </Button>
-</section>
+<div class="flex flex-1 flex-col items-center justify-center p-4">
+    <section
+        class="bg-secondary/90 flex w-full max-w-lg flex-col gap-4 rounded-2xl border border-white/10 p-6 shadow-2xl backdrop-blur-xl sm:p-8"
+    >
+        <div class="flex flex-col items-center gap-2 text-center">
+            <div
+                class="bg-accent/15 text-accent border-accent/30 flex h-12 w-12 items-center justify-center rounded-2xl border text-2xl"
+            >
+                <Icon name="bi-people-fill" />
+            </div>
+            <Title class="text-center text-2xl lg:text-3xl">Připojení k rodině</Title>
+            <p class="text-text/75 text-sm">
+                Rodina: <strong class="text-text">{pageData.familyName}</strong> · Kód:
+                <code class="bg-background rounded px-1.5 py-0.5 font-bold"
+                    >{pageData.code}</code
+                >
+            </p>
+        </div>
+
+        <form
+            onsubmit={(e) => {
+                e.preventDefault();
+                register();
+            }}
+            class="flex flex-col gap-3.5"
+        >
+            <Entry id="username" label="Uživatelské jméno" error={data.username.error}>
+                <Input
+                    id="username"
+                    autocomplete="username"
+                    bind:value={data.username.value}
+                    invalid={data.username.error}
+                />
+            </Entry>
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <Entry id="firstname" label="Jméno" error={data.firstname.error}>
+                    <Input
+                        id="firstname"
+                        autocomplete="given-name"
+                        bind:value={data.firstname.value}
+                        invalid={data.firstname.error}
+                    />
+                </Entry>
+                <Entry id="lastname" label="Příjmení" error={data.lastname.error}>
+                    <Input
+                        id="lastname"
+                        autocomplete="family-name"
+                        bind:value={data.lastname.value}
+                        invalid={data.lastname.error}
+                    />
+                </Entry>
+            </div>
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <Entry id="password" label="Heslo" error={data.password.error}>
+                    <Input
+                        id="password"
+                        type="password"
+                        autocomplete="new-password"
+                        bind:value={data.password.value}
+                        invalid={data.password.error}
+                    />
+                </Entry>
+                <Entry id="password2" label="Heslo (znovu)" error={data.password2.error}>
+                    <Input
+                        id="password2"
+                        type="password"
+                        autocomplete="new-password"
+                        bind:value={data.password2.value}
+                        invalid={data.password2.error}
+                    />
+                </Entry>
+            </div>
+            <Button type="submit" class="mt-2">Vytvořit účet a vstoupit</Button>
+        </form>
+    </section>
+</div>
 <Footer version={pageData.version} />

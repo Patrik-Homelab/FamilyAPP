@@ -114,10 +114,16 @@
 
 {#snippet renderItem(item: Selectable<Shoppinglist>)}
     {#if userData.logged}
-        <div class="border-text flex flex-row gap-2 rounded-md border-2 p-2">
+        <div
+            class={[
+                'bg-secondary/75 flex flex-row items-center gap-3 rounded-2xl border border-white/10 p-3 shadow-xs transition-colors',
+                item.bought_by ? 'opacity-65' : 'hover:border-white/20'
+            ]}
+        >
             {#if item.bought_by === null}
                 <input
                     type="checkbox"
+                    class="accent-accent h-5 w-5 shrink-0 cursor-pointer rounded"
                     onchange={(ev) => {
                         if (ev.currentTarget.checked) {
                             selected = [...selected, item.id];
@@ -127,76 +133,120 @@
                     }}
                 />
             {/if}
-            <div class="flex w-1/4 items-center justify-center">
+            <div
+                class="bg-background/60 flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/10"
+            >
                 {#if item.image}
-                    <a href="/images/{item.image}" target="_blank"
-                        ><Image name={item.image} alt="" /></a
-                    >
+                    <a href="/images/{item.image}" target="_blank" class="h-full w-full">
+                        <Image
+                            name={item.image}
+                            alt={item.name}
+                            class="h-full w-full object-cover"
+                        />
+                    </a>
                 {:else}
-                    <Icon name="bi-image" class="text-4xl" />
+                    <Icon name="bi-image" class="text-text/30 text-2xl" />
                 {/if}
             </div>
-            <div class="flex flex-1 flex-col justify-between gap-2">
-                <div
-                    class={[
-                        'flex flex-row justify-between',
-                        item.bought_by ? 'line-through' : ''
-                    ]}
-                >
-                    <h1 class="text-xl font-bold lg:text-2xl">
-                        {item.count}x {item.name}
+            <div class="flex min-w-0 flex-1 flex-col gap-1">
+                <div class="flex items-start justify-between gap-2">
+                    <h1
+                        class={[
+                            'font-poppins text-base font-bold lg:text-lg',
+                            item.bought_by ? 'line-through' : ''
+                        ]}
+                    >
+                        <span
+                            class="bg-accent/15 text-accent mr-1.5 inline-block rounded-md px-1.5 py-0.5 text-xs font-bold"
+                        >
+                            {item.count}×
+                        </span>
+                        {item.name}
                     </h1>
                     {#if userData.data.id === item.user_id}
-                        <Icon
+                        <button
+                            type="button"
                             onclick={() => removeItem(item.id)}
-                            name="bi-trash-fill"
-                            class="text-red-500"
-                        />
+                            class="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg text-red-400 transition-colors hover:bg-red-500/15"
+                            title="Smazat položku"
+                        >
+                            <Icon name="bi-trash-fill" />
+                        </button>
                     {/if}
                 </div>
                 {#if item.bought_by === null}
-                    <h2 class="text-lg lg:text-xl">
+                    <p class="text-text/60 text-xs lg:text-sm">
                         Přidal/a: {formatUser(
                             data.users.find((u) => u.id === item.user_id)!
-                        )} ({toDate(item.created_at)})
-                    </h2>
+                        )} · {toDate(item.created_at)}
+                    </p>
                 {:else}
-                    <h2 class="text-lg lg:text-xl">
+                    <p class="text-text/60 text-xs lg:text-sm">
                         Zakoupil/a: {formatUser(
                             data.users.find((u) => u.id === item.bought_by)!
-                        )} ({toDate(item.bought_at!)})
-                    </h2>
+                        )} · {toDate(item.bought_at!)}
+                    </p>
                 {/if}
             </div>
         </div>
     {/if}
 {/snippet}
 
-<div class="mt-2 h-full w-full flex-1">
-    <div class="flex items-center justify-between text-2xl 2xl:text-3xl">
-        <a href="/{page.params.family}/shoppinglist/new"><Icon name="bi-cart-plus" /></a>
-        <Icon
-            onclick={buy}
-            name="bi-check-lg"
-            class={[selected.length > 0 ? 'text-green-500' : 'text-gray-500']}
-        />
-    </div>
-    <Title class="my-2">K nakoupení</Title>
-    {#if toBuy.length === 0}
-        <p class="text-center">Nákupní seznam, je prázdný</p>
-    {:else}
-        <div class="flex flex-col gap-2">
-            {#each toBuy as item (item.id)}
-                {@render renderItem(item)}
-            {/each}
+<div class="flex flex-1 flex-col gap-5 pb-6">
+    <div
+        class="bg-secondary/80 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 p-4 shadow-sm"
+    >
+        <Title class="text-xl lg:text-2xl">Nákupní seznam</Title>
+        <div class="flex flex-wrap items-center gap-2">
+            <a
+                href="/{page.params.family}/shoppinglist/new"
+                class="bg-accent inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold text-white shadow-xs transition hover:brightness-110"
+            >
+                <Icon name="bi-cart-plus" />
+                <span>Přidat položku</span>
+            </a>
+            <button
+                type="button"
+                onclick={buy}
+                disabled={selected.length === 0}
+                class={[
+                    'inline-flex cursor-pointer items-center gap-2 rounded-xl border px-3.5 py-2 text-sm font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-40',
+                    selected.length > 0
+                        ? 'border-emerald-500/40 bg-emerald-600 text-white hover:bg-emerald-500'
+                        : 'text-text/60 border-white/15 bg-white/5'
+                ]}
+            >
+                <Icon name="bi-check-lg" />
+                <span>Zakoupeno ({selected.length})</span>
+            </button>
         </div>
-    {/if}
+    </div>
+
+    <div class="flex flex-col gap-2.5">
+        <h2 class="font-poppins text-text/80 text-lg font-bold">K nakoupení</h2>
+        {#if toBuy.length === 0}
+            <div
+                class="bg-secondary/60 text-text/60 rounded-2xl border border-white/10 p-6 text-center text-sm"
+            >
+                Nákupní seznam je prázdný
+            </div>
+        {:else}
+            <div class="grid grid-cols-1 gap-2.5 lg:grid-cols-2">
+                {#each toBuy as item (item.id)}
+                    {@render renderItem(item)}
+                {/each}
+            </div>
+        {/if}
+    </div>
+
     {#if bought.length > 0}
-        <Title class="my-2">Zakoupeno</Title>
-        <div class="flex flex-col gap-2">
-            {#each bought as item (item.id)}
-                {@render renderItem(item)}
-            {/each}
+        <div class="flex flex-col gap-2.5">
+            <h2 class="font-poppins text-text/60 text-lg font-bold">Zakoupeno</h2>
+            <div class="grid grid-cols-1 gap-2.5 lg:grid-cols-2">
+                {#each bought as item (item.id)}
+                    {@render renderItem(item)}
+                {/each}
+            </div>
         </div>
     {/if}
 </div>

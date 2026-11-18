@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { Button, Entry, Input, Select } from '$/components/form';
+    import { Button, Entry, Input, Select, Slider } from '$/components/form';
     import Title from '$/components/headers/Title.svelte';
     import Icon from '$/components/Icon.svelte';
     import { API } from '$/lib/api';
@@ -215,12 +215,14 @@
     };
 </script>
 
-<section class="flex flex-1 flex-col gap-6 p-4">
+<section class="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 pb-6">
     <Title>Nastavení rodiny</Title>
 
     <!-- General Family Settings -->
-    <div class="bg-secondary flex flex-col gap-4 rounded-lg p-4 shadow-md">
-        <h2 class="text-xl font-bold">Obecné nastavení</h2>
+    <div
+        class="bg-secondary/85 flex flex-col gap-5 rounded-2xl border border-white/10 p-5 shadow-md sm:p-6"
+    >
+        <h2 class="font-poppins text-xl font-bold">Obecné nastavení</h2>
 
         <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
             <Entry id="family-name" label="Název rodiny">
@@ -237,24 +239,33 @@
             </Entry>
         </div>
 
-        <div class="border-primary flex flex-col gap-2 rounded-md border p-3">
-            <label class="flex cursor-pointer items-center gap-2 font-bold">
-                <input type="checkbox" bind:checked={allowJoinCode} />
-                <span>Povolit připojení nových členů pomocí kódu rodiny</span>
-            </label>
+        <div
+            class="bg-background/50 flex flex-col gap-3 rounded-xl border border-white/10 p-4"
+        >
+            <Entry
+                id="allow-join-code"
+                label="Povolit připojení nových členů pomocí kódu rodiny"
+                row={true}
+            >
+                <Slider id="allow-join-code" bind:value={allowJoinCode} />
+            </Entry>
 
-            <div class="flex flex-wrap items-center gap-2">
-                <span>Kód rodiny:</span>
-                <code class="bg-background rounded px-2 py-1 text-lg font-bold"
+            <div class="flex flex-wrap items-center gap-2.5 pt-1">
+                <span class="text-text/70 text-sm">Kód rodiny:</span>
+                <code
+                    class="bg-secondary rounded-lg border border-white/15 px-3 py-1 text-base font-bold tracking-wider"
                     >{joinCode}</code
                 >
-                <Button onclick={copyJoinLink} class="w-auto px-3 py-1 text-base">
+                <Button
+                    onclick={copyJoinLink}
+                    class="w-auto bg-white/10 px-3 py-1.5 text-sm hover:bg-white/15"
+                >
                     <Icon name="bi-clipboard" /> Kopírovat odkaz
                 </Button>
                 <Button
                     onclick={() => saveGeneral(true)}
                     disabled={savingGeneral}
-                    class="w-auto bg-amber-600 px-3 py-1 text-base hover:bg-amber-700"
+                    class="w-auto bg-amber-600 px-3 py-1.5 text-sm hover:bg-amber-500"
                 >
                     <Icon name="bi-arrow-repeat" /> Obnovit kód
                 </Button>
@@ -273,13 +284,14 @@
     </div>
 
     <!-- Home Assistant / Water Temperature Settings -->
-    <div class="bg-secondary flex flex-col gap-4 rounded-lg p-4 shadow-md">
-        <div class="flex flex-wrap items-center justify-between gap-2">
-            <h2 class="text-xl font-bold">Home Assistant – Teplota vody</h2>
-            <label class="flex cursor-pointer items-center gap-2 font-bold">
-                <input type="checkbox" bind:checked={haEnabled} />
-                <span>Povolit sledování teploty vody</span>
-            </label>
+    <div
+        class="bg-secondary/85 flex flex-col gap-5 rounded-2xl border border-white/10 p-5 shadow-md sm:p-6"
+    >
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <h2 class="font-poppins text-xl font-bold">Home Assistant – Teplota vody</h2>
+            <Entry id="ha-enabled" label="Povolit sledování" row={true} auto={true}>
+                <Slider id="ha-enabled" bind:value={haEnabled} />
+            </Entry>
         </div>
 
         {#if haEnabled}
@@ -312,8 +324,9 @@
                 <Button
                     onclick={testHaConnection}
                     disabled={testingHa}
-                    class="w-auto bg-sky-600 px-4 py-2 hover:bg-sky-700"
+                    class="w-auto bg-sky-600 px-4 py-2 text-sm hover:bg-sky-500"
                 >
+                    <Icon name="bi-plug-fill" />
                     {testingHa
                         ? 'Testuji spojení...'
                         : 'Otestovat připojení & načíst senzory'}
@@ -321,25 +334,27 @@
             </div>
 
             {#if discoveredSensors.length > 0}
-                <div class="border-primary flex flex-col gap-2 rounded-md border p-3">
-                    <h3 class="font-bold">
+                <div
+                    class="bg-background/50 flex flex-col gap-2 rounded-xl border border-white/10 p-4"
+                >
+                    <h3 class="text-sm font-bold">
                         Nalezené teplotní senzory v Home Assistant ({discoveredSensors.length}):
                     </h3>
-                    <div class="flex max-h-48 flex-col gap-1 overflow-y-auto text-sm">
+                    <div class="flex max-h-52 flex-col gap-1.5 overflow-y-auto text-sm">
                         {#each discoveredSensors as ds (ds.entity_id)}
                             <div
-                                class="bg-background flex items-center justify-between gap-2 rounded p-2"
+                                class="bg-secondary/80 flex items-center justify-between gap-2 rounded-xl border border-white/10 p-2.5"
                             >
                                 <div class="min-w-0 flex-1">
-                                    <div class="truncate font-bold">{ds.name}</div>
-                                    <div class="truncate opacity-75">
+                                    <div class="truncate font-semibold">{ds.name}</div>
+                                    <div class="text-text/60 truncate text-xs">
                                         {ds.entity_id} ({ds.state}
                                         {ds.unit ?? ''})
                                     </div>
                                 </div>
                                 <Button
                                     onclick={() => addSensor(ds.entity_id, ds.name)}
-                                    class="w-auto px-2 py-1 text-xs"
+                                    class="w-auto px-3 py-1 text-xs"
                                 >
                                     + Přidat
                                 </Button>
@@ -350,21 +365,21 @@
             {/if}
 
             <!-- Configured Sensors -->
-            <div class="flex flex-col gap-2">
+            <div class="flex flex-col gap-3">
                 <div class="flex items-center justify-between">
-                    <h3 class="text-lg font-bold">
+                    <h3 class="font-poppins text-lg font-bold">
                         Sledované senzory ({sensors.length})
                     </h3>
                     <Button
                         onclick={() => addSensor()}
-                        class="w-auto bg-green-600 px-3 py-1 text-base hover:bg-green-700"
+                        class="w-auto bg-emerald-600 px-3 py-1.5 text-sm hover:bg-emerald-500"
                     >
                         <Icon name="bi-plus-lg" /> Přidat senzor
                     </Button>
                 </div>
 
                 {#if sensors.length === 0}
-                    <p class="text-sm opacity-75">
+                    <p class="text-text/65 text-sm">
                         Zatím není nakonfigurovaný žádný senzor. Můžete přidat 1 nebo více
                         senzorů (např. jen jeden bojler, nebo horní a spodní čidlo).
                     </p>
@@ -372,7 +387,7 @@
 
                 {#each sensors as sensor, idx (idx)}
                     <div
-                        class="border-primary grid grid-cols-1 items-end gap-2 rounded-md border p-3 md:grid-cols-[1fr_2fr_auto_auto]"
+                        class="bg-background/40 grid grid-cols-1 items-end gap-3 rounded-xl border border-white/10 p-3.5 md:grid-cols-[1fr_2fr_auto_auto]"
                     >
                         <Entry label="Popisek">
                             <Input
@@ -386,17 +401,17 @@
                                 bind:value={sensor.entity_id}
                             />
                         </Entry>
-                        <div class="flex flex-col gap-1">
-                            <span class="text-sm font-bold">Barva</span>
+                        <div class="flex flex-col gap-1.5">
+                            <span class="text-text/85 text-sm font-semibold">Barva</span>
                             <input
                                 type="color"
                                 bind:value={sensor.color}
-                                class="h-10 w-14 cursor-pointer rounded border-0 bg-transparent"
+                                class="h-10 w-14 cursor-pointer rounded-lg border border-white/15 bg-transparent p-0.5"
                             />
                         </div>
                         <Button
                             onclick={() => removeSensor(idx)}
-                            class="w-auto bg-red-600 px-3 py-2 hover:bg-red-700"
+                            class="w-auto bg-red-600/80 px-3 py-2.5 hover:bg-red-600"
                             title="Odebrat senzor"
                         >
                             <Icon name="bi-trash-fill" />
@@ -406,11 +421,16 @@
             </div>
 
             <!-- Temperature Alert Settings -->
-            <div class="border-primary flex flex-col gap-3 rounded-md border p-3">
-                <label class="flex cursor-pointer items-center gap-2 font-bold">
-                    <input type="checkbox" bind:checked={alertsEnabled} />
-                    <span>Povolit push upozornění při mimořádné teplotě</span>
-                </label>
+            <div
+                class="bg-background/50 flex flex-col gap-4 rounded-xl border border-white/10 p-4"
+            >
+                <Entry
+                    id="ha-alerts-enabled"
+                    label="Povolit push upozornění při mimořádné teplotě"
+                    row={true}
+                >
+                    <Slider id="ha-alerts-enabled" bind:value={alertsEnabled} />
+                </Entry>
 
                 {#if alertsEnabled && sensors.length > 0}
                     <div class="grid grid-cols-1 gap-4 md:grid-cols-3">

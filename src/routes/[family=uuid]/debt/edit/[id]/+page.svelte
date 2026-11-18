@@ -144,69 +144,75 @@
     } satisfies Snapshot<Omit<DataType, 'image'>>;
 </script>
 
-<Icon
-    onclick={() => goto(`/${page.params.family}/debt`)}
-    name="bi-arrow-return-left"
-    class="text-2xl lg:text-3xl"
-/>
-<section
-    class="md:border-accent md:bg-secondary flex flex-1 flex-col items-center justify-center gap-4 p-4 md:m-auto md:flex-0 md:rounded-md md:border-2 md:p-8"
->
-    <Title>Úprava dlužení č.{pageData.data.id}</Title>
-    <Entry id="who" label="Dlužník" error={data.who.error}>
-        <Select id="who" bind:value={data.who.value} invalid={data.who.error}>
-            <option value={null} selected disabled>Vyber dlužníka</option>
-            {#each pageData.users as user (user.id)}
-                <option value={user.id}>{formatUser(user)}</option>
-            {/each}
-        </Select>
-    </Entry>
-    <Entry
-        id="amount"
-        label="Částka"
-        note="(používá se desetinná tečka)"
-        error={data.amount.error}
+<div class="mx-auto flex w-full max-w-lg flex-1 flex-col gap-4 py-4">
+    <button
+        type="button"
+        onclick={() => goto(`/${page.params.family}/debt`)}
+        class="text-text/75 hover:text-text bg-secondary/70 inline-flex w-max cursor-pointer items-center gap-2 rounded-xl border border-white/10 px-3 py-1.5 text-sm font-semibold transition-colors"
     >
-        <Input
-            id="amount"
-            type="number"
-            step={0.00001}
-            bind:value={data.amount.value}
-            invalid={data.amount.error}
-        />
-    </Entry>
-    <Entry
-        id="when"
-        label="Kdy"
-        note="(proběhla například platba/placení)"
-        error={data.when.error}
-    >
-        <Input
-            id="when"
-            type="datetime-local"
-            bind:value={data.when.value}
-            invalid={data.when.error}
-        />
-    </Entry>
-    {#if pageData.data.photo && !imageDeleted}
-        <div class="max-w-2xl">
-            <h2 class="font-poppins text-lg font-bold 2xl:text-xl">
-                Aktuální obrázek <Icon
-                    onclick={() => (imageDeleted = true)}
-                    name="bi-trash-fill"
-                    class="text-red-500"
-                />
-            </h2>
-            <Image name={pageData.data.photo} alt="uploaded preview" />
-        </div>
-    {/if}
-    <Entry id="img" label="Obrázek" note="(nepovinné)" error={data.image.error}>
-        <FileSelect
-            id="img"
-            bind:value={data.image.value}
-            accept="image/png, image/jpg, image/jpeg"
-        />
-    </Entry>
+        <Icon name="bi-arrow-return-left" />
+        <span>Zpět na dlužníček</span>
+    </button>
 
-    <Button onclick={handle}>Upravit</Button>
-</section>
+    <section
+        class="bg-secondary/90 flex flex-col gap-4 rounded-2xl border border-white/10 p-6 shadow-xl"
+    >
+        <Title class="text-xl lg:text-2xl">Úprava dlužení č.{pageData.data.id}</Title>
+        <Entry id="who" label="Dlužník" error={data.who.error}>
+            <Select id="who" bind:value={data.who.value} invalid={data.who.error}>
+                <option value={null} selected disabled>Vyber dlužníka</option>
+                {#each pageData.users as user (user.id)}
+                    <option value={user.id}>{formatUser(user)}</option>
+                {/each}
+            </Select>
+        </Entry>
+        <Entry
+            id="amount"
+            label="Částka"
+            note="(používá se desetinná tečka)"
+            error={data.amount.error}
+        >
+            <Input
+                id="amount"
+                type="number"
+                step={0.00001}
+                bind:value={data.amount.value}
+                invalid={data.amount.error}
+            />
+        </Entry>
+        <Entry
+            id="when"
+            label="Kdy"
+            note="(proběhla například platba/placení)"
+            error={data.when.error}
+        >
+            <Input
+                id="when"
+                type="datetime-local"
+                bind:value={data.when.value}
+                invalid={data.when.error}
+            />
+        </Entry>
+        {#if pageData.data.photo && !imageDeleted}
+            <div class="max-w-2xl">
+                <h2 class="font-poppins text-lg font-bold 2xl:text-xl">
+                    Aktuální obrázek <Icon
+                        onclick={() => (imageDeleted = true)}
+                        name="bi-trash-fill"
+                        class="text-red-500"
+                    />
+                </h2>
+                <Image name={pageData.data.photo} alt="uploaded preview" />
+            </div>
+        {/if}
+        <Entry id="img" label="Obrázek" note="(nepovinné)" error={data.image.error}>
+            <FileSelect
+                id="img"
+                bind:value={data.image.value}
+                accept="image/png, image/jpg, image/jpeg"
+            />
+        </Entry>
+
+        <Button onclick={handle}>Uložit změny</Button>
+    </section>
+</div>

@@ -65,33 +65,55 @@
 </script>
 
 {#snippet item(name: string)}
-    <div class="border-text bg-primary rounded-md border-2 p-2 font-bold">
-        {name}
-        <Icon
+    <div
+        class="bg-secondary/90 inline-flex items-center gap-2 rounded-full border border-white/15 px-3.5 py-1.5 text-sm font-semibold shadow-xs"
+    >
+        <span>{name}</span>
+        <button
+            type="button"
             onclick={() => removePermission(name)}
-            name="bi-trash-fill"
-            class="text-red-600"
-        />
+            class="cursor-pointer text-red-400 transition-colors hover:text-red-300"
+            title="Odebrat oprávnění"
+        >
+            <Icon name="bi-trash-fill" />
+        </button>
     </div>
 {/snippet}
 
-<div class="flex h-full w-full flex-1 flex-col">
-    <Icon
+<div class="flex flex-1 flex-col gap-5 pb-6">
+    <button
+        type="button"
         onclick={() => goto(`/${page.params.family}/groups/`)}
-        name="bi-arrow-return-left"
-        class="w-max text-2xl hover:text-gray-500"
-    />
-    <h1 class="font-poppins my-2 text-2xl font-bold">
-        Úprava: ({groupData.id}) {groupData.name}
-    </h1>
-    <div class="flex h-full w-full flex-wrap gap-2">
-        {#each groupData.permissions as permission (permission)}
-            {@render item(permission)}
-        {/each}
-        <Icon
+        class="text-text/75 hover:text-text bg-secondary/70 inline-flex w-max cursor-pointer items-center gap-2 rounded-xl border border-white/10 px-3 py-1.5 text-sm font-semibold transition-colors"
+    >
+        <Icon name="bi-arrow-return-left" />
+        <span>Zpět na skupiny</span>
+    </button>
+
+    <div
+        class="bg-secondary/80 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 p-4 shadow-sm"
+    >
+        <h1 class="font-poppins text-xl font-bold lg:text-2xl">
+            Oprávnění skupiny: {groupData.name}
+            <span class="text-text/50 text-sm font-normal">(#{groupData.id})</span>
+        </h1>
+        <button
+            type="button"
             onclick={addPermission}
-            name="bi-plus-lg"
-            class="border-text my-auto rounded-md border-2 px-1.5 py-0.5 text-green-600"
-        />
+            class="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-emerald-600 px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-emerald-500"
+        >
+            <Icon name="bi-plus-lg" />
+            <span>Přidat oprávnění</span>
+        </button>
+    </div>
+
+    <div class="flex flex-wrap gap-2.5">
+        {#if groupData.permissions.length === 0}
+            <p class="text-text/60 text-sm">Tato skupina zatím nemá žádná oprávnění.</p>
+        {:else}
+            {#each groupData.permissions as permission (permission)}
+                {@render item(permission)}
+            {/each}
+        {/if}
     </div>
 </div>

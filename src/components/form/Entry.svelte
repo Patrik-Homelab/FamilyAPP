@@ -22,18 +22,30 @@
     } = $props();
 </script>
 
-<div class:w-full={!auto} class={{ 'flex flex-col': !row, 'flex flex-row gap-2': row }}>
+<div
+    class:w-full={!auto}
+    class={{
+        'flex flex-col': !row,
+        'flex flex-row items-center justify-between gap-3': row
+    }}
+>
     <label
         class={[
-            'mb-2 font-bold',
-            !small ? 'text-xl lg:text-2xl' : 'text-sm lg:text-base'
+            'text-text/85 font-semibold',
+            !row ? 'mb-1.5' : '',
+            !small ? 'text-sm lg:text-base' : 'text-xs lg:text-sm'
         ]}
         for={id}
     >
-        {label} <span class="text-base text-gray-500 lg:text-lg">{note}</span>
+        {label}
+        {#if note}
+            <span class="text-text/50 ml-1 text-xs font-normal lg:text-sm">{note}</span>
+        {/if}
     </label>
     {@render children()}
-    <span class:invisible={!error} class="text-sm font-bold text-red-500"
-        >{error ?? '...'}</span
-    >
+    {#if !row}
+        <span class:hidden={!error} class="mt-1 text-xs font-medium text-red-400"
+            >{error ?? ''}</span
+        >
+    {/if}
 </div>

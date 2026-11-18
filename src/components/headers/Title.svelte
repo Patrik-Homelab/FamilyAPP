@@ -10,7 +10,7 @@
 
 <h1
     class={twMerge(
-        'border-b-text font-poppins mx-auto w-max border-b-4 text-2xl font-bold lg:text-3xl',
+        'font-poppins text-text text-2xl font-bold tracking-tight lg:text-3xl',
         resolveSvelteClass(cls ?? '')
     )}
 >

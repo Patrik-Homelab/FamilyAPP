@@ -1,4 +1,5 @@
 <script lang="ts">
+    import Icon from '$/components/Icon.svelte';
     import type { DailyRoutine } from '$/types/database';
     import { page } from '$app/stores';
     import { API } from '$lib/api';
@@ -94,11 +95,20 @@
     }
 </script>
 
-<div class="bg-background h-full min-h-screen w-full p-2 md:p-4">
+<div class="flex w-full flex-1 flex-col gap-4 pb-6">
+    <div>
+        <a
+            href="/{$page.params.family}/timetable"
+            class="text-text/75 hover:text-text bg-secondary/70 inline-flex items-center gap-2 rounded-xl border border-white/10 px-3 py-1.5 text-sm font-semibold transition-colors"
+        >
+            <Icon name="bi-arrow-return-left" />
+            <span>Zpět na rozvrhy</span>
+        </a>
+    </div>
     {#if loading}
         <div class="flex h-64 items-center justify-center">
             <div
-                class="border-primary h-12 w-12 animate-spin rounded-full border-b-2"
+                class="border-accent h-12 w-12 animate-spin rounded-full border-b-2"
             ></div>
         </div>
     {:else}

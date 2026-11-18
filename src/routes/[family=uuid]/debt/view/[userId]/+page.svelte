@@ -207,27 +207,41 @@
     );
 </script>
 
-<section class="flex flex-1 flex-col gap-2">
-    <div class="flex w-full items-center">
-        <Icon
+<section class="flex flex-1 flex-col gap-5 pb-6">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+        <button
+            type="button"
             onclick={() => goto(`/${page.params.family}/debt`)}
-            name="bi-arrow-return-left"
-            class="text-2xl lg:text-3xl"
-        />
-        <Title class="mx-auto">Dlužení {formatUser(data.userInfo)}</Title>
+            class="text-text/75 hover:text-text bg-secondary/70 inline-flex cursor-pointer items-center gap-2 rounded-xl border border-white/10 px-3 py-1.5 text-sm font-semibold transition-colors"
+        >
+            <Icon name="bi-arrow-return-left" />
+            <span>Zpět na dlužníček</span>
+        </button>
+        <Title class="text-xl lg:text-2xl">Dlužení: {formatUser(data.userInfo)}</Title>
     </div>
 
-    <div class="flex items-center justify-between">
-        <h2>Vybráno celkem: {total} Kč</h2>
-        <div class="flex gap-2">
+    <div
+        class="bg-secondary/80 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 p-4 shadow-sm"
+    >
+        <div class="flex flex-col">
+            <span class="text-text/60 text-xs font-medium">Vybráno k úhradě</span>
+            <span class="font-poppins text-2xl font-bold text-amber-400">{total} Kč</span>
+        </div>
+        <div class="flex flex-wrap gap-2">
             {#if hasBankAccount}
-                <Button onclick={downloadQR} disabled={total === 0} class="w-auto">
-                    Stáhnout QR
+                <Button
+                    onclick={downloadQR}
+                    disabled={total === 0}
+                    class="w-auto bg-sky-600 hover:brightness-110"
+                >
+                    <Icon name="bi-qr-code" />
+                    <span>Stáhnout QR platbu</span>
                 </Button>
             {/if}
-            <Button onclick={confirm} disabled={total === 0} class="w-auto"
-                >Potvrdit</Button
-            >
+            <Button onclick={confirm} disabled={total === 0} class="w-auto">
+                <Icon name="bi-check-lg" />
+                <span>Potvrdit zaplacení</span>
+            </Button>
         </div>
     </div>
 

@@ -1,5 +1,7 @@
 <script lang="ts">
+    import { resolveSvelteClass } from '$/lib/functions';
     import type { SvelteHTMLElements } from 'svelte/elements';
+    import { twMerge } from 'tailwind-merge';
     let {
         class: cls = '',
         value = $bindable(''),
@@ -7,7 +9,14 @@
     }: SvelteHTMLElements['select'] = $props();
 </script>
 
-<select class={cls} bind:value {...props}>
+<select
+    class={twMerge(
+        'bg-secondary text-text focus:border-accent cursor-pointer rounded-xl border border-white/15 px-3 py-1.5 text-base font-medium outline-hidden transition-colors',
+        resolveSvelteClass(cls ?? '')
+    )}
+    bind:value
+    {...props}
+>
     <option value={0}>Leden</option>
     <option value={1}>Únor</option>
     <option value={2}>Březen</option>

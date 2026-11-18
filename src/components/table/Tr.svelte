@@ -6,6 +6,12 @@
     const { children, class: cls, ...props }: SvelteHTMLElements['tr'] = $props();
 </script>
 
-<tr {...props} class={twMerge('border-text border-2', resolveSvelteClass(cls ?? ''))}>
+<tr
+    {...props}
+    class={twMerge(
+        'border-t border-white/10 transition-colors hover:bg-white/[0.03]',
+        resolveSvelteClass(cls ?? '')
+    )}
+>
     {@render children?.()}
 </tr>

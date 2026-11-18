@@ -8,9 +8,9 @@
     }: { textColor: string; backgroundColor: string; children: Snippet } = $props();
 </script>
 
-<div
+<span
     style="color: {textColor}; background-color:{backgroundColor};"
-    class="border-opacity-20 font-poppins inline-block rounded-md border-2 border-black px-2 py-1 text-center font-bold"
+    class="font-poppins inline-flex items-center rounded-full border border-white/15 px-2.5 py-0.5 text-xs font-semibold shadow-xs"
 >
     {@render children()}
-</div>
+</span>

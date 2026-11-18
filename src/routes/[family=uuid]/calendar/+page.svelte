@@ -469,30 +469,63 @@
 </script>
 
 {#if _state.userState.logged}
-    <div class="flex flex-1 flex-col items-center gap-2">
-        <div class="flex w-full items-center gap-1 px-4 text-4xl">
-            <Icon
+    <div class="flex flex-1 flex-col gap-5 pb-6">
+        <!-- Calendar Toolbar -->
+        <div
+            class="bg-secondary/80 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 p-3 shadow-sm"
+        >
+            <button
+                type="button"
                 onclick={showAddingEvent}
-                class="mr-auto text-xl"
-                name="bi-calendar-plus"
-            />
-            <Icon onclick={monthBefore} name="bi-chevron-left" />
-            <MonthSelector class="text-2xl" bind:value={month} />
-            <select class="text-2xl" bind:value={year}>
-                <!-- eslint-disable-next-line @typescript-eslint/no-unused-vars -->
-                {#each new Array(10) as _, i (i)}
-                    {@const y = year - 5 + i}
-                    <option value={y}>{y}</option>
-                {/each}
-            </select>
+                class="bg-accent inline-flex cursor-pointer items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold text-white shadow-xs transition hover:brightness-110"
+            >
+                <Icon name="bi-calendar-plus" />
+                <span>Přidat událost</span>
+            </button>
 
-            <Icon onclick={monthAfter} name="bi-chevron-right" />
-            <Icon
+            <div class="flex items-center gap-2">
+                <button
+                    type="button"
+                    onclick={monthBefore}
+                    class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl border border-white/10 transition-colors hover:bg-white/10"
+                    aria-label="Předchozí měsíc"
+                >
+                    <Icon name="bi-chevron-left" />
+                </button>
+                <MonthSelector
+                    class="text-sm font-semibold sm:text-base"
+                    bind:value={month}
+                />
+                <select
+                    class="bg-secondary text-text focus:border-accent cursor-pointer rounded-xl border border-white/15 px-3 py-1.5 text-sm font-semibold outline-hidden sm:text-base"
+                    bind:value={year}
+                >
+                    <!-- eslint-disable-next-line @typescript-eslint/no-unused-vars -->
+                    {#each new Array(10) as _, i (i)}
+                        {@const y = year - 5 + i}
+                        <option value={y}>{y}</option>
+                    {/each}
+                </select>
+                <button
+                    type="button"
+                    onclick={monthAfter}
+                    class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl border border-white/10 transition-colors hover:bg-white/10"
+                    aria-label="Další měsíc"
+                >
+                    <Icon name="bi-chevron-right" />
+                </button>
+            </div>
+
+            <button
+                type="button"
                 onclick={() => selectedDay.setTime(Date.now())}
-                class="ml-auto text-xl"
-                name="bi-calendar-event"
-            />
+                class="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-white/15 px-3 py-2 text-sm font-semibold transition-colors hover:bg-white/10"
+            >
+                <Icon name="bi-calendar-event" />
+                <span>Dnes</span>
+            </button>
         </div>
+
         <Table bind:self={calendarEl}>
             <thead>
                 <Tr>
@@ -503,83 +536,120 @@
             </thead>
             <tbody class="text-center align-middle select-none">
                 {#each calendar.monthWeekIterator(selectedDay) as week (week)}
-                    <Tr>
+                    <Tr class="hover:bg-transparent">
                         {#each week as day (day.date.toString())}
                             {@const hasEvent = events?.some((event) => {
                                 return eventIsInDay(day.date, event);
                             })}
+                            {@const isSelected =
+                                day.date.toDateString() === selectedDay.toDateString()}
                             <Td
                                 onclick={() => {
                                     selectedDay.setTime(day.date.getTime());
                                 }}
-                                class={{
-                                    'text-gray-500': !day.isCurrentMonth,
-                                    'font-bold text-sky-500': day.isToday,
-                                    'cursor-pointer': true,
-                                    'bg-sky-500 text-white':
-                                        day.date.toDateString() ===
-                                        selectedDay.toDateString(),
-                                    'text-yellow-500': hasEvent
-                                }}
+                                class={[
+                                    'relative cursor-pointer p-1.5 text-center transition-colors sm:p-2.5',
+                                    !day.isCurrentMonth && 'text-text/35',
+                                    isSelected
+                                        ? 'bg-accent/25 ring-accent/70 font-bold text-white ring-2 ring-inset'
+                                        : 'hover:bg-white/[0.06]',
+                                    day.isToday &&
+                                        !isSelected &&
+                                        'font-bold text-sky-400 ring-1 ring-sky-400/50 ring-inset'
+                                ]}
                             >
-                                {day.date.getDate()}
+                                <div
+                                    class="flex flex-col items-center justify-center gap-0.5"
+                                >
+                                    <span>{day.date.getDate()}</span>
+                                    <span
+                                        class={[
+                                            'h-1.5 w-1.5 rounded-full',
+                                            hasEvent ? 'bg-amber-400' : 'bg-transparent'
+                                        ]}
+                                    ></span>
+                                </div>
                             </Td>
                         {/each}
                     </Tr>
                 {/each}
             </tbody>
         </Table>
-        <Title>{intl.format(selectedDay)}</Title>
-        <div class="flex w-full flex-col gap-2 divide-y-2 divide-white px-4">
+
+        <div class="flex flex-col gap-3">
+            <Title class="text-xl lg:text-2xl">{intl.format(selectedDay)}</Title>
             {#if events}
                 {@const eventsToday = events.filter((event) => {
                     return eventIsInDay(selectedDay, event);
                 })}
                 {#if eventsToday.length == 0}
-                    <p class="text-center text-gray-500">
-                        V tento den nejsou žádné údalosti
-                    </p>
+                    <div
+                        class="bg-secondary/60 text-text/60 rounded-2xl border border-white/10 p-6 text-center text-sm"
+                    >
+                        V tento den nejsou žádné události
+                    </div>
                 {:else}
-                    {#each sortEvents(eventsToday) as event (selectedDay.toString() + event.id)}
-                        <div class="flex flex-col gap-1">
-                            <div class="flex justify-between">
-                                <p class="font-bold">
-                                    {getEventName(event, selectedDay)}
-                                </p>
-                                <p>
-                                    <Icon name="bi-clock-fill" />
-
-                                    {getEventRange(event, selectedDay)}
-                                </p>
-                            </div>
-                            <p>{event.description}</p>
-                            <div class="flex justify-between">
-                                <p>
-                                    <Icon name="bi-person-fill" />
-                                    {formatUser(
-                                        data.users.find(
-                                            (user) => user.id === event.user_id
-                                        )!
-                                    )}
-                                </p>
-                                <div class="flex gap-2">
-                                    {#if event.user_id === _state.userState.data.id}
-                                        <Icon
-                                            onclick={() => removeEvent(event.id)}
-                                            name="bi-trash-fill"
-                                            class="text-red-500"
-                                        />
-                                    {/if}
-                                    <a href={makeGoogleCalendarUrl(event)} target="_blank"
-                                        ><Icon name="bi-share-fill" /></a
+                    <div class="flex flex-col gap-2.5">
+                        {#each sortEvents(eventsToday) as event (selectedDay.toString() + event.id)}
+                            <div
+                                class="bg-secondary/75 flex flex-col gap-2 rounded-2xl border border-white/10 p-4 shadow-xs"
+                            >
+                                <div
+                                    class="flex flex-wrap items-center justify-between gap-2"
+                                >
+                                    <p class="font-poppins text-base font-bold">
+                                        {getEventName(event, selectedDay)}
+                                    </p>
+                                    <span
+                                        class="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-xs font-medium"
                                     >
+                                        <Icon name="bi-clock-fill" />
+                                        {getEventRange(event, selectedDay)}
+                                    </span>
+                                </div>
+                                {#if event.description}
+                                    <p class="text-text/75 text-sm">
+                                        {event.description}
+                                    </p>
+                                {/if}
+                                <div class="flex items-center justify-between gap-2 pt-1">
+                                    <span
+                                        class="text-text/60 flex items-center gap-1.5 text-xs"
+                                    >
+                                        <Icon name="bi-person-fill" />
+                                        {formatUser(
+                                            data.users.find(
+                                                (user) => user.id === event.user_id
+                                            )!
+                                        )}
+                                    </span>
+                                    <div class="flex items-center gap-2">
+                                        {#if event.user_id === _state.userState.data.id}
+                                            <button
+                                                type="button"
+                                                onclick={() => removeEvent(event.id)}
+                                                class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-red-400 transition-colors hover:bg-red-500/15"
+                                                title="Smazat událost"
+                                            >
+                                                <Icon name="bi-trash-fill" />
+                                            </button>
+                                        {/if}
+                                        <a
+                                            href={makeGoogleCalendarUrl(event)}
+                                            target="_blank"
+                                            class="text-text/75 hover:text-text flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-white/10"
+                                            title="Přidat do Google Kalendáře"
+                                        >
+                                            <Icon name="bi-share-fill" />
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    {/each}
+                        {/each}
+                    </div>
                 {/if}
             {:else}
-                <p class="text-center text-gray-500">Načítání...</p>
+                <p class="text-text/60 text-center text-sm">Načítání...</p>
             {/if}
         </div>
     </div>
@@ -588,13 +658,23 @@
 {#if addingEvent}
     <div
         bind:this={addOverlay}
-        class="absolute top-0 left-0 z-20 flex h-screen w-full items-center justify-center bg-black/50"
+        class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/65 p-4 backdrop-blur-sm"
     >
         <ClickOutside
             clickoutside={() => (addingEvent = false)}
-            class="border-primary bg-secondary flex flex-col gap-2 rounded-md border-2 p-4"
+            class="bg-secondary flex w-full max-w-lg flex-col gap-3 rounded-2xl border border-white/15 p-6 shadow-2xl"
         >
-            <Title>Přidání události</Title>
+            <div class="flex items-center justify-between border-b border-white/10 pb-3">
+                <Title class="text-xl lg:text-2xl">Přidání události</Title>
+                <button
+                    type="button"
+                    onclick={() => (addingEvent = false)}
+                    class="text-text/60 hover:text-text flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg hover:bg-white/10"
+                    aria-label="Zavřít"
+                >
+                    <Icon name="bi-x-lg" />
+                </button>
+            </div>
             <Entry id="name" label="Název" error={eventData.name.error}>
                 <Input
                     id="name"
@@ -605,41 +685,48 @@
             <Entry id="desc" label="Popis" error={eventData.description.error}>
                 <TextArea
                     id="desc"
+                    rows={2}
                     bind:value={eventData.description.value}
                     invalid={eventData.description.error}
                 />
             </Entry>
-            <Entry id="fullDay" label="Celodenní událost?">
-                <Slider
-                    id="fullDay"
-                    bind:value={eventData.fullDay.value}
-                    invalid={eventData.fullDay.error}
-                />
-            </Entry>
-            <Entry id="notification" label="Odeslat oznámení o přidání?">
-                <Slider
-                    id="notification"
-                    bind:value={eventData.notification.value}
-                    invalid={eventData.notification.error}
-                />
-            </Entry>
-            <Entry id="from" label="Začátek" error={eventData.from.error}>
-                <Input
-                    id="from"
-                    type={eventData.fullDay.value ? 'date' : 'datetime-local'}
-                    bind:value={eventData.from.value}
-                    invalid={eventData.from.error}
-                />
-            </Entry>
-            <Entry id="to" label="Konec" error={eventData.to.error}>
-                <Input
-                    id="to"
-                    type={eventData.fullDay.value ? 'date' : 'datetime-local'}
-                    bind:value={eventData.to.value}
-                    invalid={eventData.to.error}
-                />
-            </Entry>
-            <Button onclick={addEvent}>Přidat</Button>
+            <div
+                class="bg-background/40 grid grid-cols-1 gap-3 rounded-xl border border-white/10 p-3 sm:grid-cols-2"
+            >
+                <Entry id="fullDay" label="Celodenní událost" row={true} small={true}>
+                    <Slider
+                        id="fullDay"
+                        bind:value={eventData.fullDay.value}
+                        invalid={eventData.fullDay.error}
+                    />
+                </Entry>
+                <Entry id="notification" label="Odeslat oznámení" row={true} small={true}>
+                    <Slider
+                        id="notification"
+                        bind:value={eventData.notification.value}
+                        invalid={eventData.notification.error}
+                    />
+                </Entry>
+            </div>
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <Entry id="from" label="Začátek" error={eventData.from.error}>
+                    <Input
+                        id="from"
+                        type={eventData.fullDay.value ? 'date' : 'datetime-local'}
+                        bind:value={eventData.from.value}
+                        invalid={eventData.from.error}
+                    />
+                </Entry>
+                <Entry id="to" label="Konec" error={eventData.to.error}>
+                    <Input
+                        id="to"
+                        type={eventData.fullDay.value ? 'date' : 'datetime-local'}
+                        bind:value={eventData.to.value}
+                        invalid={eventData.to.error}
+                    />
+                </Entry>
+            </div>
+            <Button onclick={addEvent} class="mt-2">Přidat událost</Button>
         </ClickOutside>
     </div>
 {/if}
