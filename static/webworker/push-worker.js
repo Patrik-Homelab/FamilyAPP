@@ -10,11 +10,14 @@ const CATEGORIES = [
     '/calendar',
     '/shoppinglist',
     '/water-temperature',
+    '/family-settings',
     '/groups',
     '/users',
     '/notifications',
     '/settings'
 ];
+
+const UUID_PREFIX = /^\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
 
 function openBadgeDB() {
     return new Promise((resolve, reject) => {
@@ -35,7 +38,7 @@ function openBadgeDB() {
 
 function extractCategory(url) {
     if (!url || typeof url !== 'string') return '';
-    const clean = url.replace(/^\/app/, '');
+    const clean = url.replace(UUID_PREFIX, '').replace(/^\/app/, '');
     for (const cat of CATEGORIES) {
         if (clean === cat || clean.startsWith(cat + '/') || clean.startsWith(cat + '?')) {
             return cat;
@@ -127,8 +130,8 @@ self.addEventListener('fetch', (event) => {
                     const directMatch = await caches.match(event.request);
                     if (directMatch) return directMatch;
 
-                    // Fallback to cached '/app'
-                    const appMatch = await caches.match('/app');
+                    // Fallback to cached '/'
+                    const appMatch = await caches.match('/');
                     if (appMatch) return appMatch;
 
                     // Fallback to any cached page in familyapp-pages
@@ -181,7 +184,7 @@ self.addEventListener('push', (event) => {
 self.addEventListener('notificationclick', (event) => {
     const notification = event.notification;
     const data = notification.data || {};
-    const defaultUrl = self.location.origin + '/app/';
+    const defaultUrl = self.location.origin + '/';
     const targetUrl =
         'url' in data
             ? data.url.startsWith('/')

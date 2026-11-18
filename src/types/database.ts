@@ -14,6 +14,7 @@ export type Generated<T> =
 
 export interface Calendar {
     description: Generated<string | null>;
+    family_id: number;
     from: Date;
     full_day: Buffer;
     id: Generated<number>;
@@ -35,6 +36,7 @@ export interface DailyRoutine {
 }
 
 export interface Debt {
+    family_id: number;
     id: Generated<number>;
     photo: Generated<string | null>;
     price: Decimal;
@@ -48,8 +50,58 @@ export interface EnabledTempNotifications {
     userId: number;
 }
 
+export interface Family {
+    allow_join_code: Generated<number>;
+    created_at: Generated<Date>;
+    default_group_id: Generated<number | null>;
+    id: Generated<number>;
+    join_code: string;
+    name: string;
+    owner_user_id: Generated<number | null>;
+    uuid: string;
+}
+
+export interface FamilyHaConfig {
+    alert_max_temp: Generated<Decimal>;
+    alert_min_temp: Generated<Decimal>;
+    alert_sensor_id: Generated<number | null>;
+    alerts_enabled: Generated<number>;
+    enabled: Generated<number>;
+    family_id: number;
+    ha_token_encrypted: string;
+    ha_url: Generated<string>;
+    last_incident_at: Generated<Date | null>;
+    last_incident_state: Generated<number>;
+    last_incident_temp: Generated<Decimal | null>;
+    updated_at: Generated<Date>;
+}
+
+export interface FamilyHaSensor {
+    color: Generated<string>;
+    entity_id: string;
+    family_id: number;
+    id: Generated<number>;
+    label: string;
+    sort_order: Generated<number>;
+}
+
+export interface GateOpening {
+    activation_count: number;
+    activations_used: Generated<number>;
+    created_at: Generated<Date>;
+    created_by_user_id: number;
+    description: string;
+    end_date: Generated<Date | null>;
+    group_id: number;
+    id: Generated<number>;
+    start_date: Date;
+    updated_at: Generated<Date>;
+    uuid: string;
+}
+
 export interface Group {
     bg_color: string;
+    family_id: number;
     id: Generated<number>;
     name: string;
     text_color: string;
@@ -63,6 +115,7 @@ export interface GroupPermissions {
 export interface Invitation {
     code: string;
     created_at: Generated<Date>;
+    family_id: number;
     id: Generated<number>;
     user_id: number;
 }
@@ -71,6 +124,7 @@ export interface Present {
     bought: Generated<number>;
     created_at: Generated<Date>;
     description: Generated<string | null>;
+    family_id: number;
     id: Generated<number>;
     image: Generated<string | null>;
     link: Generated<string | null>;
@@ -82,15 +136,48 @@ export interface Present {
     user_id: number;
 }
 
+export interface Route {
+    day: number;
+    direction: string;
+    id: Generated<number>;
+    user_id: number;
+}
+
+export interface RouteSegment {
+    end_station: Generated<string | null>;
+    end_time: Generated<number | null>;
+    id: Generated<number>;
+    position: number;
+    route_id: number;
+    start_station: Generated<string | null>;
+    start_time: Generated<number | null>;
+    transport_type: string;
+}
+
 export interface Shoppinglist {
     bought_at: Generated<Date | null>;
     bought_by: Generated<number | null>;
     count: number;
     created_at: Generated<Date>;
+    family_id: number;
     id: Generated<number>;
     image: Generated<string | null>;
     name: string;
     user_id: number;
+}
+
+export interface SolarCooling {
+    active_override: Generated<string | null>;
+    down_temp: Generated<Decimal>;
+    enabled: Generated<number>;
+    freeze_target_temp: Generated<Decimal>;
+    freeze_temp: Generated<Decimal>;
+    id: number;
+    last_action: Generated<string | null>;
+    last_action_at: Generated<Date | null>;
+    max_temp: Generated<Decimal>;
+    overheat_temp: Generated<Decimal>;
+    updated_at: Generated<Date | null>;
 }
 
 export interface TimetableEntry {
@@ -109,6 +196,7 @@ export interface User {
     bank_account_number: Generated<string | null>;
     bank_account_prefix: Generated<string | null>;
     bank_code: Generated<string | null>;
+    family_id: number;
     firstname: string;
     id: Generated<number>;
     lastname: string;
@@ -129,29 +217,21 @@ export interface WebPush {
     userId: number;
 }
 
-export interface SolarCooling {
-    active_override: Generated<string | null>;
-    down_temp: Generated<Decimal>;
-    enabled: Generated<number>;
-    freeze_target_temp: Generated<Decimal>;
-    freeze_temp: Generated<Decimal>;
-    id: Generated<number>;
-    last_action: Generated<string | null>;
-    last_action_at: Generated<Date | null>;
-    max_temp: Generated<Decimal>;
-    overheat_temp: Generated<Decimal>;
-    updated_at: Generated<Date | null>;
-}
-
 export interface DB {
     calendar: Calendar;
     daily_routine: DailyRoutine;
     debt: Debt;
     enabled_temp_notifications: EnabledTempNotifications;
+    family: Family;
+    family_ha_config: FamilyHaConfig;
+    family_ha_sensor: FamilyHaSensor;
+    gate_opening: GateOpening;
     group: Group;
     group_permissions: GroupPermissions;
     invitation: Invitation;
     present: Present;
+    route: Route;
+    route_segment: RouteSegment;
     shoppinglist: Shoppinglist;
     solar_cooling: SolarCooling;
     timetable_entry: TimetableEntry;

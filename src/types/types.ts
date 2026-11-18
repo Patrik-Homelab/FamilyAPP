@@ -2,6 +2,9 @@ import type { Selectable } from 'kysely';
 import type { User, Group } from './database';
 
 export type UserData = Omit<Selectable<User>, 'password'> & {
+    family_uuid: string;
+    family_name: string;
+    ha_enabled: boolean;
     permissions: string[];
     group?: Selectable<Group>;
 };

@@ -5,11 +5,13 @@
     import { API } from '$/lib/api';
     import { extractError, matchError } from '$/lib/errors';
     import { SwalAlert } from '$/lib/functions';
+    import { getState } from '$/lib/state.svelte';
     import { goto } from '$app/navigation';
     import { page } from '$app/state';
     import type { PageData } from './$types';
 
     const { data: pageData }: { data: PageData } = $props();
+    const _state = getState();
 
     const fields = [
         'username',
@@ -84,7 +86,12 @@
             title: 'Byl jsi úspěšně zaregistrován'
         });
 
-        goto('/');
+        _state.userState = {
+            logged: true,
+            data: response.data
+        };
+
+        goto(`/${response.data.family_uuid}`);
     };
 </script>
 
@@ -92,9 +99,9 @@
     class="md:border-accent md:bg-secondary flex flex-1 flex-col items-center justify-center gap-4 p-4 md:m-auto md:flex-0 md:rounded-md md:border-2 md:p-8"
 >
     <Title class="text-center text-3xl lg:text-4xl">Registrace</Title>
-    <h3>
-        Na pozvánku: <strong>{page.params.code}</strong> od {pageData.invitation
-            .firstname}
+    <h3 class="text-center">
+        Pozvánka do rodiny <strong>{pageData.invitation.family_name}</strong> (kód:
+        <strong>{page.params.code}</strong>) od {pageData.invitation.firstname}
         {pageData.invitation.lastname}
     </h3>
     <Entry id="username" label="Uživatelské jméno" error={data.username.error}>

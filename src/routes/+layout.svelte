@@ -18,6 +18,8 @@
         if (data.permissions.status) {
             _data.permissions = data.permissions.data.permissions;
             _data.group = data.permissions.data.group;
+            _data.family_name = data.permissions.data.family_name;
+            _data.ha_enabled = data.permissions.data.ha_enabled;
         }
     }
 

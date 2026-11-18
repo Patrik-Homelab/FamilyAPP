@@ -6,6 +6,6 @@
 
 <footer class="text-center font-bold">
     Created by <Link link="https://patrick115.eu">Patrik Mintěl</Link> verze <Link
-        link="/app/changelog">{version}</Link
+        link="/changelog">{version}</Link
     >
 </footer>

@@ -70,7 +70,7 @@ export default defineConfig({
                     process.env.NODE_ENV === 'production'
                         ? 'Family APP'
                         : 'Family APP - DEV',
-                start_url: '/app',
+                start_url: '/',
                 display: 'standalone',
                 background_color: '#0e0201',
                 theme_color: '#0e0201',

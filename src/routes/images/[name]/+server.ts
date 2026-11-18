@@ -1,3 +1,5 @@
+import { getCookieData } from '$/lib/server/functions';
+import { conn } from '$/lib/server/variables';
 import { FILE_FOLDER } from '$env/static/private';
 import { error, type RequestHandler } from '@sveltejs/kit';
 import fs from 'node:fs';
@@ -7,9 +9,40 @@ import sharp from 'sharp';
 export type ImageExtension = 'jpg' | 'jpeg' | 'png' | 'webp' | 'tiff';
 const extensions = ['jpg', 'jpeg', 'png', 'webp', 'tiff'] satisfies ImageExtension[];
 
-export const GET = (async ({ params, setHeaders, url }) => {
+export const GET = (async ({ params, setHeaders, url, cookies }) => {
+    const userState = getCookieData(cookies);
+    if (!userState.logged) {
+        error(401, 'Unauthorized');
+    }
+
     if (!params.name) {
         error(400, 'Name is required');
+    }
+
+    const familyId = userState.data.family_id;
+    const [inDebt, inPresent, inShopping] = await Promise.all([
+        conn
+            .selectFrom('debt')
+            .select('id')
+            .where('family_id', '=', familyId)
+            .where('photo', '=', params.name)
+            .executeTakeFirst(),
+        conn
+            .selectFrom('present')
+            .select('id')
+            .where('family_id', '=', familyId)
+            .where('image', '=', params.name)
+            .executeTakeFirst(),
+        conn
+            .selectFrom('shoppinglist')
+            .select('id')
+            .where('family_id', '=', familyId)
+            .where('image', '=', params.name)
+            .executeTakeFirst()
+    ]);
+
+    if (!inDebt && !inPresent && !inShopping) {
+        error(404, 'File not found');
     }
 
     const parsed = Path.parse(params.name);

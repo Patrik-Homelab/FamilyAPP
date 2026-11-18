@@ -46,6 +46,16 @@ export const ERRORS = {
     },
     users: {
         notFound: 'Uživatel nenalezen'
+    },
+    family: {
+        notFound: 'Rodina nebyla nalezena',
+        invalidJoinCode: 'Neplatný kód pozvánky nebo rodiny',
+        haDisabled: 'Sledování teploty vody není pro tuto rodinu povoleno',
+        haConnectionFailed: 'Nepodařilo se připojit k Home Assistant',
+        invalidSensors: 'Zadejte alespoň jeden platný senzor'
+    },
+    groups: {
+        notFound: 'Skupina nebyla nalezena'
     }
 } as const;
 

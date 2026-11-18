@@ -76,6 +76,7 @@ export default [
             await conn
                 .insertInto('present')
                 .values({
+                    family_id: ctx.family_id,
                     user_id: ctx.id,
                     image: fileName,
                     ...data.data
@@ -116,6 +117,7 @@ export default [
             .selectFrom('present')
             .selectAll()
             .where('id', '=', input.id)
+            .where('family_id', '=', ctx.family_id)
             .executeTakeFirst();
         if (!present) {
             return {
@@ -223,12 +225,14 @@ export default [
                     bought: input.toState === 0 ? 0 : undefined
                 })
                 .where('id', '=', input.id)
+                .where('family_id', '=', ctx.family_id)
                 .execute();
 
             const newData = await conn
                 .selectFrom('present')
                 .selectAll()
                 .where('id', '=', input.id)
+                .where('family_id', '=', ctx.family_id)
                 .executeTakeFirst();
             if (!newData) {
                 return {
@@ -254,7 +258,13 @@ export default [
         try {
             await conn
                 .deleteFrom('present')
-                .where((eb) => eb.and([eb('id', '=', input), eb('user_id', '=', ctx.id)]))
+                .where((eb) =>
+                    eb.and([
+                        eb('id', '=', input),
+                        eb('user_id', '=', ctx.id),
+                        eb('family_id', '=', ctx.family_id)
+                    ])
+                )
                 .execute();
             return {
                 status: true
@@ -308,7 +318,11 @@ export default [
             .selectFrom('present')
             .select('image')
             .where((eb) =>
-                eb.and([eb('id', '=', data.data.id), eb('user_id', '=', ctx.id)])
+                eb.and([
+                    eb('id', '=', data.data.id),
+                    eb('user_id', '=', ctx.id),
+                    eb('family_id', '=', ctx.family_id)
+                ])
             )
             .executeTakeFirst();
         if (!present) {
@@ -355,6 +369,7 @@ export default [
                     updated_at: new Date()
                 })
                 .where('id', '=', data.data.id)
+                .where('family_id', '=', ctx.family_id)
                 .execute();
 
             return {

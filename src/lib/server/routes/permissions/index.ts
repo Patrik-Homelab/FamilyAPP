@@ -1,38 +1,64 @@
-import type { DePromise, Response, ResponseWithData, UserData } from '$/types/types';
-import { COOKIE_EXPIRE } from '$env/static/private';
+import type { ErrorList } from '$/lib/errors';
+import type { Response, ResponseWithData, UserData } from '$/types/types';
 import type { ErrorApiResponse } from '@patrick115/sveltekitapi';
 import { z } from 'zod';
-import { loggedProcedure } from '../../api';
-import { getUserPermissions } from '../../functions';
-import { conn, jwt } from '../../variables';
+import { loggedProcedure, permProcedure } from '../../api';
+import { getUserFamilyContext, setSessionCookie } from '../../functions';
+import { conn } from '../../variables';
+import { GROUP_PERMISSION } from '../groups';
+
+const groupPermProcedure = permProcedure([GROUP_PERMISSION]);
 
 export default [
     loggedProcedure.GET.query(async ({ ctx, ev: { cookies } }) => {
-        const permissions = await getUserPermissions(ctx.id);
+        const refreshed = await getUserFamilyContext(ctx.id);
+        if (!refreshed) {
+            return {
+                status: false,
+                code: 401,
+                message: 'Unauthorized'
+            } satisfies ErrorApiResponse;
+        }
 
-        const updatedCookie = jwt.setCookie({
-            ...ctx,
-            permissions: permissions.permissions,
-            group: permissions.group
-        } satisfies UserData);
-
-        cookies.set('session', updatedCookie, {
-            path: '/',
-            maxAge: parseInt(COOKIE_EXPIRE)
-        });
+        setSessionCookie(cookies, refreshed);
 
         return {
             status: true,
-            data: permissions
-        } satisfies ResponseWithData<DePromise<ReturnType<typeof getUserPermissions>>>;
+            data: {
+                permissions: refreshed.permissions,
+                group: refreshed.group,
+                family_name: refreshed.family_name,
+                ha_enabled: refreshed.ha_enabled
+            }
+        } satisfies ResponseWithData<{
+            permissions: UserData['permissions'];
+            group: UserData['group'];
+            family_name: string;
+            ha_enabled: boolean;
+        }>;
     }),
-    loggedProcedure.PUT.input(
+    groupPermProcedure.PUT.input(
         z.object({
             id: z.number(),
             permission: z.string()
         })
-    ).query(async ({ input }) => {
+    ).query(async ({ input, ctx }) => {
         try {
+            const group = await conn
+                .selectFrom('group')
+                .select('id')
+                .where('id', '=', input.id)
+                .where('family_id', '=', ctx.family_id)
+                .executeTakeFirst();
+
+            if (!group) {
+                return {
+                    status: false,
+                    code: 404,
+                    message: 'groups.notFound' satisfies ErrorList
+                } satisfies ErrorApiResponse;
+            }
+
             await conn
                 .insertInto('group_permissions')
                 .values({
@@ -49,18 +75,32 @@ export default [
             return {
                 status: false,
                 code: 500,
-
                 message: 'Něco se nepovedlo na serveru :('
             } satisfies ErrorApiResponse;
         }
     }),
-    loggedProcedure.DELETE.input(
+    groupPermProcedure.DELETE.input(
         z.object({
             id: z.number(),
             permission: z.string()
         })
-    ).query(async ({ input }) => {
+    ).query(async ({ input, ctx }) => {
         try {
+            const group = await conn
+                .selectFrom('group')
+                .select('id')
+                .where('id', '=', input.id)
+                .where('family_id', '=', ctx.family_id)
+                .executeTakeFirst();
+
+            if (!group) {
+                return {
+                    status: false,
+                    code: 404,
+                    message: 'groups.notFound' satisfies ErrorList
+                } satisfies ErrorApiResponse;
+            }
+
             await conn
                 .deleteFrom('group_permissions')
                 .where((eb) =>
@@ -79,7 +119,6 @@ export default [
             return {
                 status: false,
                 code: 500,
-
                 message: 'Něco se nepovedlo na serveru :('
             } satisfies ErrorApiResponse;
         }
