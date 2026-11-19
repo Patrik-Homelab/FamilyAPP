@@ -10,6 +10,7 @@
     import { page } from '$app/state';
     import type { PageData } from './$types';
     import QRCode from 'qrcode';
+    import { UAParser } from 'ua-parser-js';
 
     import type { PageProps } from './$types';
 
@@ -148,6 +149,20 @@
         return `CZ${checkDigits}${bban}`;
     };
 
+    const showQrModal = (qrDataUrl: string) => {
+        SwalAlert({
+            toast: false,
+            timer: 0,
+            position: 'center',
+            title: 'QR platba',
+            text: 'Podržte prst na obrázku pro uložení do Fotek nebo jej rovnou naskenujte.',
+            imageUrl: qrDataUrl,
+            imageAlt: 'QR kód k platbě',
+            showConfirmButton: true,
+            confirmButtonText: 'Zavřít'
+        });
+    };
+
     const downloadQR = async () => {
         if (!data.userInfo.bank_account_number || !data.userInfo.bank_code) {
             SwalAlert({
@@ -178,16 +193,50 @@
                 }
             });
 
-            // Create download link
-            const link = document.createElement('a');
-            link.href = qrDataUrl;
             // Sanitize filename to remove invalid characters
             const sanitizedAccountNumber = accountNumber.replace(/[^a-zA-Z0-9]/g, '');
             const sanitizedAmount = amount.toFixed(2).replace('.', '_');
-            link.download = `platba_${sanitizedAmount}CZK_${sanitizedAccountNumber}.png`;
+            const fileName = `platba_${sanitizedAmount}CZK_${sanitizedAccountNumber}.png`;
+
+            const blob = await (await fetch(qrDataUrl)).blob();
+            const file = new File([blob], fileName, { type: 'image/png' });
+            const isIOS = UAParser(navigator.userAgent).os.is('iOS');
+
+            if (isIOS || navigator.canShare?.({ files: [file] })) {
+                if (navigator.canShare?.({ files: [file] })) {
+                    try {
+                        await navigator.share({
+                            files: [file],
+                            title: 'QR platba'
+                        });
+                        SwalAlert({
+                            title: 'QR kód byl uložen / sdílen',
+                            icon: 'success'
+                        });
+                        return;
+                    } catch (shareErr) {
+                        if (shareErr instanceof Error && shareErr.name === 'AbortError') {
+                            return;
+                        }
+                        // Share failed (e.g. lost user gesture); fall through to modal on iOS
+                    }
+                }
+
+                if (isIOS) {
+                    showQrModal(qrDataUrl);
+                    return;
+                }
+            }
+
+            // Desktop / non-iOS fallback using Blob object URL
+            const blobUrl = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = blobUrl;
+            link.download = fileName;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+            setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
 
             SwalAlert({
                 title: 'QR kód byl úspěšně stažen',
